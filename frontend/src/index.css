@@ -1,0 +1,140 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    @apply text-gray-800 bg-white;
+  }
+  h1, h2, h3, h4, h5 {
+    font-family: 'Montserrat', 'Inter', sans-serif;
+  }
+}
+
+@layer components {
+  .section-label {
+    @apply text-xs font-semibold tracking-[0.2em] uppercase text-teal-500 mb-3;
+  }
+  .section-title {
+    @apply text-3xl md:text-4xl font-bold text-teal-800 leading-tight;
+  }
+  .btn-primary {
+    @apply inline-flex items-center gap-2 bg-teal-600 text-white px-6 py-3 rounded-lg font-semibold
+           shadow-sm transition-all duration-200 ease-out
+           hover:bg-teal-700 hover:shadow-md hover:-translate-y-0.5
+           active:bg-teal-800 active:translate-y-0 active:scale-[0.98]
+           disabled:hover:translate-y-0 disabled:active:scale-100;
+  }
+  .btn-outline {
+    @apply inline-flex items-center gap-2 border-2 border-teal-600 text-teal-600 px-6 py-3 rounded-lg font-semibold
+           transition-all duration-200 ease-out
+           hover:bg-teal-600 hover:text-white hover:-translate-y-0.5 hover:shadow-md
+           active:translate-y-0 active:scale-[0.98]
+           disabled:hover:translate-y-0 disabled:active:scale-100;
+  }
+  .card {
+    @apply bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden
+           transition-all duration-300 ease-out
+           hover:shadow-lg hover:-translate-y-1;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer components {
+  .input-field {
+    @apply w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm
+           transition-all duration-200 ease-out
+           focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent
+           bg-white placeholder-gray-400;
+  }
+}
+
+/* Profondeur 3D (cartes, vignettes) : perspective sur le wrapper, rotation/ombre/reflet pilotés
+   par useTilt en inline (voir hooks/useTilt.ts -- l'inline gagne toujours sur le hover Tailwind
+   de `.card`, qui cible aussi transform/box-shadow), contenu interne surélevé en Z pour un effet
+   de couches. Desactivé sur tactile/prefers-reduced-motion côté JS. */
+.tilt-wrap {
+  perspective: 1200px;
+}
+.tilt-card {
+  --glare-x: 50%;
+  --glare-y: 50%;
+  --glare-opacity: 0;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.12s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.12s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.tilt-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  border-radius: inherit;
+  background: radial-gradient(circle at var(--glare-x) var(--glare-y), rgba(255, 255, 255, 0.5), transparent 60%);
+  opacity: var(--glare-opacity);
+  transition: opacity 0.2s ease-out;
+  pointer-events: none;
+}
+.tilt-layer {
+  transform: translateZ(44px) scale(0.94);
+}
+
+/* Formes organiques flottantes (Hero, CTA) : voir components/OrganicFloat.tsx. */
+.organic-blob {
+  --px: 0px;
+  --py: 0px;
+  position: absolute;
+  border-radius: 60% 40% 55% 45% / 45% 55% 40% 60%;
+  filter: blur(36px);
+  transform: translate3d(var(--px), var(--py), 0);
+  transition: transform 0.6s ease-out;
+  animation: organicFloat 12s ease-in-out infinite alternate;
+}
+.organic-blob-1 { animation-delay: 0s; }
+.organic-blob-2 { animation-delay: -3s; animation-duration: 15s; }
+.organic-blob-3 { animation-delay: -7s; animation-duration: 10s; }
+
+@keyframes organicFloat {
+  0% { transform: translate3d(var(--px), var(--py), 0) rotate(0deg) scale(1); }
+  100% { transform: translate3d(calc(var(--px) + 18px), calc(var(--py) - 22px), 0) rotate(8deg) scale(1.05); }
+}
+
+/* Icones de departement (DepartmentIcon.tsx) : pop + legere rotation au survol du parent `.group`. */
+.department-icon {
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.group:hover .department-icon {
+  transform: scale(1.15) rotate(-6deg);
+}
+
+/* Lightbox galerie : sur petit ecran, ouverture en simple scale (sans rotateX) pour eviter
+   tout jank sur mobile -- voir pages/GalleryPage.tsx. */
+@media (max-width: 767px) {
+  .animate-lightbox-in {
+    animation: scaleIn 0.2s ease-out forwards;
+  }
+  .animate-lightbox-out {
+    animation: scaleOut 0.2s ease-in forwards;
+  }
+}
+
+/* Respecte la préférence de mouvement réduit : les transitions/animations
+   restent fonctionnelles mais quasi instantanées, jamais désactivées au
+   point de cacher un changement d'état important. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
