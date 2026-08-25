@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { CheckCircle, XCircle, Clock, Calendar, MapPin } from 'lucide-react';
-import { registrationsApi } from '../lib/api';
+import { CheckCircle, XCircle, Clock, Calendar, MapPin, Download } from 'lucide-react';
+import { registrationsApi, API_URL } from '../lib/api';
 import { formatDate } from '../lib/format';
 import type { Ticket } from '../types/database';
 
@@ -73,6 +73,15 @@ export default function TicketPage() {
           <p className="text-sm text-teal-700 bg-teal-50 border border-teal-200 rounded-xl p-3 mb-4">
             Présence enregistrée{ticket.checkedInAt ? ` — ${new Date(ticket.checkedInAt).toLocaleString('fr-FR')}` : ''}
           </p>
+        )}
+
+        {(ticket.paymentStatus === 'not_required' || ticket.paymentStatus === 'paid') && (
+          <a
+            href={`${API_URL}/registrations/ticket/${ticketCode}/download`}
+            className="btn-primary w-full justify-center mb-3"
+          >
+            <Download size={16} /> Télécharger mon billet (PDF)
+          </a>
         )}
 
         <Link to="/activites" className="btn-outline w-full justify-center">Voir toutes les activités</Link>

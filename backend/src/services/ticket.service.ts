@@ -10,3 +10,6 @@ export const ticketUrl = (ticketCode: string): string => {
 
 export const generateQrDataUrl = async (ticketCode: string): Promise<string> =>
   QRCode.toDataURL(ticketUrl(ticketCode), { width: 320, margin: 1 });
+
+export const generateQrBuffer = async (ticketCode: string): Promise<Buffer> =>
+  QRCode.toBuffer(ticketUrl(ticketCode), { width: 320, margin: 1 });

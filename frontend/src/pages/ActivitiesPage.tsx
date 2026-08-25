@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, MapPin, CheckCircle, X, ArrowLeft, Ticket as TicketIcon } from 'lucide-react';
-import { activitiesApi, registrationsApi } from '../lib/api';
+import { Calendar, MapPin, CheckCircle, X, ArrowLeft, Ticket as TicketIcon, Download } from 'lucide-react';
+import { activitiesApi, registrationsApi, API_URL } from '../lib/api';
 import { formatDate } from '../lib/format';
 import Reveal from '../components/Reveal';
 import TiltCard from '../components/TiltCard';
@@ -84,13 +84,21 @@ function RegistrationModal({ activity, onClose }: { activity: Activity; onClose:
             <h4 className="font-bold text-teal-800 text-lg mb-2">Inscription confirmée !</h4>
             <p className="text-gray-500 text-sm mb-6">Votre billet vient de vous être envoyé par e-mail.</p>
             {ticketCode && (
-              <Link
-                to={`/billet/${ticketCode}`}
-                className="btn-outline w-full justify-center mb-3"
-                onClick={requestClose}
-              >
-                <TicketIcon size={16} /> Voir mon billet
-              </Link>
+              <>
+                <Link
+                  to={`/billet/${ticketCode}`}
+                  className="btn-outline w-full justify-center mb-3"
+                  onClick={requestClose}
+                >
+                  <TicketIcon size={16} /> Voir mon billet
+                </Link>
+                <a
+                  href={`${API_URL}/registrations/ticket/${ticketCode}/download`}
+                  className="btn-outline w-full justify-center mb-3"
+                >
+                  <Download size={16} /> Télécharger (PDF)
+                </a>
+              </>
             )}
             <button onClick={requestClose} className="btn-primary w-full justify-center">Fermer</button>
           </div>

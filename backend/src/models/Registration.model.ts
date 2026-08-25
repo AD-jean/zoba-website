@@ -28,7 +28,7 @@ const RegistrationSchema: Schema = new Schema(
   {
     activityId: { type: Schema.Types.ObjectId, ref: 'Activity', required: true, index: true },
     name: { type: String, required: true, trim: true },
-    email: { type: String, required: true, trim: true },
+    email: { type: String, required: true, trim: true, lowercase: true },
     phone: { type: String, trim: true },
     church: { type: String, trim: true },
     notes: { type: String, trim: true },
@@ -57,5 +57,23 @@ RegistrationSchema.index({ stripePaymentIntentId: 1 }, { unique: true, sparse: t
 RegistrationSchema.index({ stripeEventId: 1 }, { unique: true, sparse: true });
 RegistrationSchema.index({ fedapayTransactionId: 1 }, { unique: true, sparse: true });
 RegistrationSchema.index({ fedapayEventId: 1 }, { unique: true, sparse: true });
+
+// Une personne (email) ne peut avoir qu'une seule inscription valide par activite. Index partiel :
+// ne s'applique qu'aux inscriptions actives (pas annulees) et resolues (gratuites ou payees) --
+// les paiements encore 'pending'/'failed' n'y sont pas soumis, pour permettre une nouvelle tentative
+// apres un paiement rate ou abandonne. Protection reelle contre les doublons concurrents, pas
+// seulement une verification applicative (evite la race condition).
+// Note : partialFilterExpression ne supporte pas $ne/$not (erreur MongoDB a la creation de
+// l'index) -- $in avec les valeurs explicites est la forme supportee equivalente.
+RegistrationSchema.index(
+  { activityId: 1, email: 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      status: { $in: ['pending', 'confirmed'] },
+      paymentStatus: { $in: ['not_required', 'paid'] }
+    }
+  }
+);
 
 export default mongoose.model<IRegistration>('Registration', RegistrationSchema);

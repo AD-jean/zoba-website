@@ -4,6 +4,9 @@ import { IActivity } from '../models/Activity.model';
 import { sendTicketEmail } from './email.service';
 import { ticketUrl, generateQrDataUrl } from './ticket.service';
 
+const isDuplicateKeyError = (err: unknown): boolean =>
+  !!err && typeof err === 'object' && 'code' in err && (err as { code?: number }).code === 11000;
+
 const sendTicketIfPossible = async (registrationId: string): Promise<void> => {
   const registration = await Registration.findById(registrationId).populate<{ activityId: IActivity }>('activityId');
   if (!registration) return;
@@ -34,16 +37,29 @@ export const applyStripeEvent = async (event: Stripe.Event): Promise<void> => {
   if (!registrationId) return;
 
   if (event.type === 'payment_intent.succeeded') {
-    const updated = await Registration.findOneAndUpdate(
-      { _id: registrationId, paymentStatus: { $ne: 'paid' } },
-      {
-        paymentStatus: 'paid',
-        stripePaymentIntentId: intent.id,
-        stripeEventId: event.id,
-        transactionId: intent.id
-      },
-      { new: true }
-    );
+    let updated;
+    try {
+      updated = await Registration.findOneAndUpdate(
+        { _id: registrationId, paymentStatus: { $ne: 'paid' } },
+        {
+          paymentStatus: 'paid',
+          stripePaymentIntentId: intent.id,
+          stripeEventId: event.id,
+          transactionId: intent.id
+        },
+        { new: true }
+      );
+    } catch (err) {
+      // Index partiel unique (activityId+email) : cette personne a deja une autre inscription
+      // payee pour cette activite (ex. deux onglets de paiement ouverts en parallele). Le
+      // paiement est bien encaisse cote Stripe -- on ne perd pas la trace, mais ca necessite
+      // une verification manuelle plutot qu'un crash du webhook.
+      if (isDuplicateKeyError(err)) {
+        console.error('ANOMALIE: paiement Stripe confirme mais doublon email+activite deja paye, revision manuelle necessaire', registrationId, event.id);
+        return;
+      }
+      throw err;
+    }
     if (!updated) {
       console.info('Webhook Stripe deja traite ou inscription introuvable', registrationId, event.id);
       return;
@@ -69,16 +85,25 @@ export const applyFedapayEvent = async (event: FedapayEvent): Promise<void> => {
   if (!registrationId || typeof registrationId !== 'string') return;
 
   if (event.type === 'transaction.approved') {
-    const updated = await Registration.findOneAndUpdate(
-      { _id: registrationId, paymentStatus: { $ne: 'paid' } },
-      {
-        paymentStatus: 'paid',
-        fedapayTransactionId: String(event.entity.id),
-        fedapayEventId: String(event.id),
-        transactionId: String(event.entity.id)
-      },
-      { new: true }
-    );
+    let updated;
+    try {
+      updated = await Registration.findOneAndUpdate(
+        { _id: registrationId, paymentStatus: { $ne: 'paid' } },
+        {
+          paymentStatus: 'paid',
+          fedapayTransactionId: String(event.entity.id),
+          fedapayEventId: String(event.id),
+          transactionId: String(event.entity.id)
+        },
+        { new: true }
+      );
+    } catch (err) {
+      if (isDuplicateKeyError(err)) {
+        console.error('ANOMALIE: paiement FedaPay confirme mais doublon email+activite deja paye, revision manuelle necessaire', registrationId, event.id);
+        return;
+      }
+      throw err;
+    }
     if (!updated) {
       console.info('Webhook FedaPay deja traite ou inscription introuvable', registrationId, event.id);
       return;

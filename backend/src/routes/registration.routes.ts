@@ -7,9 +7,14 @@ import { asyncHandler } from '../middleware/asyncHandler';
 import { validate } from '../middleware/validate';
 import { generateTicketCode, generateQrDataUrl, ticketUrl } from '../services/ticket.service';
 import { sendTicketEmail } from '../services/email.service';
+import { generateTicketPdf } from '../services/pdf.service';
 import * as stripeService from '../services/stripe.service';
 import * as fedapayService from '../services/fedapay.service';
 import { AppError } from '../utils/AppError';
+
+const DUPLICATE_MESSAGE = 'Vous êtes déjà inscrit(e) à cette activité avec cette adresse e-mail';
+const isDuplicateKeyError = (err: unknown): boolean =>
+  !!err && typeof err === 'object' && 'code' in err && (err as { code?: number }).code === 11000;
 
 const router = Router();
 
@@ -51,20 +56,44 @@ const checkActivityOpenForRegistration = async (activityId: string) => {
   return activity;
 };
 
+// Une personne (email) ne peut avoir qu'une seule inscription valide par activite -- verification
+// applicative pour un message d'erreur clair avant meme de tenter la creation ; l'index partiel
+// unique sur Registration reste la vraie protection contre une race condition (deux requetes
+// simultanees), voir Registration.model.ts.
+const checkNoDuplicateRegistration = async (activityId: string, email: string) => {
+  const existing = await Registration.findOne({
+    activityId,
+    email: email.toLowerCase(),
+    status: { $ne: 'cancelled' },
+    paymentStatus: { $in: ['not_required', 'paid'] }
+  });
+  if (existing) {
+    throw new AppError(409, DUPLICATE_MESSAGE);
+  }
+};
+
 router.post(
   '/',
   registrantFieldValidators,
   validate,
   asyncHandler(async (req, res) => {
-    const { activityId } = req.body;
+    const { activityId, email } = req.body;
     const activity = await checkActivityOpenForRegistration(activityId);
 
     if (activity.price > 0) {
       throw new AppError(400, 'Cette activite est payante, utilisez /api/registrations/checkout');
     }
 
+    await checkNoDuplicateRegistration(activityId, email);
+
     const ticketCode = generateTicketCode();
-    const registration = await Registration.create({ ...req.body, ticketCode, paymentStatus: 'not_required' });
+    let registration;
+    try {
+      registration = await Registration.create({ ...req.body, ticketCode, paymentStatus: 'not_required' });
+    } catch (err) {
+      if (isDuplicateKeyError(err)) throw new AppError(409, DUPLICATE_MESSAGE);
+      throw err;
+    }
 
     try {
       const qrDataUrl = await generateQrDataUrl(ticketCode);
@@ -97,20 +126,28 @@ router.post(
       throw new AppError(400, "Cette activite est gratuite, utilisez /api/registrations");
     }
 
+    await checkNoDuplicateRegistration(activityId, email);
+
     const ticketCode = generateTicketCode();
-    const registration = await Registration.create({
-      activityId,
-      name,
-      email,
-      phone,
-      church,
-      notes,
-      ticketCode,
-      paymentStatus: 'pending',
-      provider,
-      amount: activity.price,
-      currency: 'XOF'
-    });
+    let registration;
+    try {
+      registration = await Registration.create({
+        activityId,
+        name,
+        email,
+        phone,
+        church,
+        notes,
+        ticketCode,
+        paymentStatus: 'pending',
+        provider,
+        amount: activity.price,
+        currency: 'XOF'
+      });
+    } catch (err) {
+      if (isDuplicateKeyError(err)) throw new AppError(409, DUPLICATE_MESSAGE);
+      throw err;
+    }
 
     try {
       if (provider === 'stripe') {
@@ -157,6 +194,26 @@ router.get(
       checkedIn: registration.checkedIn,
       checkedInAt: registration.checkedInAt
     });
+  })
+);
+
+router.get(
+  '/ticket/:ticketCode/download',
+  asyncHandler(async (req, res) => {
+    const registration = await Registration.findOne({ ticketCode: req.params.ticketCode }).populate<{ activityId: IActivity }>('activityId', 'title date location');
+    if (!registration) return res.status(404).json({ message: 'Billet introuvable' });
+
+    const pdf = await generateTicketPdf({
+      name: registration.name,
+      activityTitle: registration.activityId.title,
+      activityDate: registration.activityId.date?.toLocaleDateString('fr-FR'),
+      activityLocation: registration.activityId.location,
+      ticketCode: registration.ticketCode
+    });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="billet-${registration.ticketCode}.pdf"`);
+    res.send(pdf);
   })
 );
 
