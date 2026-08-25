@@ -11,13 +11,14 @@ import CountUp from '../components/CountUp';
 import OrganicFloat from '../components/OrganicFloat';
 import TiltCard from '../components/TiltCard';
 import DepartmentIcon from '../components/DepartmentIcon';
+import GalleryLightbox from '../components/GalleryLightbox';
 import type { Activity, News, GalleryItem } from '../types/database';
 
 // ─── Hero ────────────────────────────────────────────────────────────────────
 
 function Hero() {
   return (
-    <section className="relative min-h-screen flex items-center overflow-hidden">
+    <section className="relative min-h-mobile-screen flex items-center overflow-hidden">
       {/* Background */}
       <div className="absolute inset-0">
         <img
@@ -56,11 +57,11 @@ function Hero() {
           </p>
 
           <div className="flex flex-wrap gap-4 opacity-0 animate-slide-up" style={{ animationDelay: '240ms' }}>
-            <Link to="/activites" className="group btn-primary bg-white text-teal-700 hover:bg-teal-50 hover:text-teal-800 shadow-lg">
-              Nos activités <ArrowRight size={16} className="transition-transform duration-200 group-hover:translate-x-1" />
+            <Link to="/dons" className="group btn-primary bg-white text-teal-700 hover:bg-teal-50 hover:text-teal-800 shadow-lg">
+              <Heart size={16} className="transition-transform duration-200 group-hover:scale-110" /> Faire un don
             </Link>
-            <Link to="/a-propos" className="btn-outline border-white/60 text-white hover:bg-white/10 hover:text-white">
-              En savoir plus
+            <Link to="/activites" className="btn-outline border-white/60 text-white hover:bg-white/10 hover:text-white">
+              Nos activités
             </Link>
           </div>
         </div>
@@ -111,8 +112,7 @@ function Stats() {
 function AboutPreview() {
   return (
     <section className="py-24 bg-white">
-      <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
+      <Reveal className="grid lg:grid-cols-2 gap-16 items-center max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div>
             <p className="section-label">À propos de nous</p>
             <h2 className="section-title mb-6">
@@ -152,7 +152,6 @@ function AboutPreview() {
               <div className="text-teal-200 text-xs tracking-widest">Zone Baptiste Agapé</div>
             </div>
           </div>
-        </div>
       </Reveal>
     </section>
   );
@@ -202,15 +201,15 @@ function DepartmentsSection() {
 
   return (
     <section className="py-24 bg-gray-50">
-      <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-14">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <Reveal className="text-center mb-14">
           <p className="section-label">Nos départements</p>
           <h2 className="section-title max-w-2xl mx-auto">
             Un espace pour chaque membre de la famille
           </h2>
-        </div>
+        </Reveal>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <Reveal className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {departments.map(({ name, icon, color, iconBg, iconColor, description, href }) => (
             <Link
               key={name}
@@ -227,8 +226,8 @@ function DepartmentsSection() {
               </div>
             </Link>
           ))}
-        </div>
-      </Reveal>
+        </Reveal>
+      </div>
     </section>
   );
 }
@@ -246,8 +245,8 @@ function ActivitiesSection({ activities, loading }: { activities: Activity[]; lo
 
   return (
     <section className="py-24 bg-white">
-      <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-14">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <Reveal className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-14">
           <div>
             <p className="section-label">Événements</p>
             <h2 className="section-title">Prochaines activités</h2>
@@ -255,7 +254,7 @@ function ActivitiesSection({ activities, loading }: { activities: Activity[]; lo
           <Link to="/activites" className="group btn-outline flex-shrink-0">
             Voir tout <ChevronRight size={16} className="transition-transform duration-200 group-hover:translate-x-1" />
           </Link>
-        </div>
+        </Reveal>
 
         {loading ? (
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -264,7 +263,7 @@ function ActivitiesSection({ activities, loading }: { activities: Activity[]; lo
             ))}
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Reveal className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {activities.slice(0, 4).map(activity => (
               <TiltCard key={activity._id} className="card group">
                 <div className="relative h-44 overflow-hidden bg-teal-100 tilt-layer">
@@ -301,9 +300,9 @@ function ActivitiesSection({ activities, loading }: { activities: Activity[]; lo
                 </div>
               </TiltCard>
             ))}
-          </div>
+          </Reveal>
         )}
-      </Reveal>
+      </div>
     </section>
   );
 }
@@ -313,8 +312,8 @@ function ActivitiesSection({ activities, loading }: { activities: Activity[]; lo
 function NewsSection({ news, loading }: { news: News[]; loading: boolean }) {
   return (
     <section className="py-24 bg-gray-50">
-      <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-14">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <Reveal className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-14">
           <div>
             <p className="section-label">Blog</p>
             <h2 className="section-title">Actualités récentes</h2>
@@ -322,7 +321,7 @@ function NewsSection({ news, loading }: { news: News[]; loading: boolean }) {
           <Link to="/actualites" className="group btn-outline flex-shrink-0">
             Voir tout <ChevronRight size={16} className="transition-transform duration-200 group-hover:translate-x-1" />
           </Link>
-        </div>
+        </Reveal>
 
         {loading ? (
           <div className="grid md:grid-cols-3 gap-8">
@@ -331,7 +330,7 @@ function NewsSection({ news, loading }: { news: News[]; loading: boolean }) {
             ))}
           </div>
         ) : (
-          <div className="grid md:grid-cols-3 gap-8">
+          <Reveal className="grid md:grid-cols-3 gap-8">
             {news.slice(0, 3).map((article, i) => (
               <article key={article._id} className={`card group ${i === 0 ? 'md:col-span-1' : ''}`}>
                 <div className="relative h-52 overflow-hidden bg-teal-100">
@@ -357,9 +356,9 @@ function NewsSection({ news, loading }: { news: News[]; loading: boolean }) {
                 </div>
               </article>
             ))}
-          </div>
+          </Reveal>
         )}
-      </Reveal>
+      </div>
     </section>
   );
 }
@@ -367,10 +366,20 @@ function NewsSection({ news, loading }: { news: News[]; loading: boolean }) {
 // ─── Gallery Preview ──────────────────────────────────────────────────────────
 
 function GalleryPreview({ items }: { items: GalleryItem[] }) {
+  const preview = items.slice(0, 6);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
   return (
     <section className="py-24 bg-teal-800">
-      <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-14">
+      {lightboxIndex !== null && (
+        <GalleryLightbox
+          items={preview}
+          startIndex={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+        />
+      )}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <Reveal className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-14">
           <div>
             <p className="text-xs font-semibold tracking-[0.2em] uppercase text-teal-400 mb-3">Photothèque</p>
             <h2 className="text-3xl md:text-4xl font-bold text-white">Notre galerie</h2>
@@ -378,13 +387,14 @@ function GalleryPreview({ items }: { items: GalleryItem[] }) {
           <Link to="/galerie" className="group flex-shrink-0 inline-flex items-center gap-2 border-2 border-white/30 text-white px-5 py-2.5 rounded-lg font-semibold transition-all duration-200 hover:bg-white/10 hover:-translate-y-0.5 text-sm">
             Voir tout <ChevronRight size={16} className="transition-transform duration-200 group-hover:translate-x-1" />
           </Link>
-        </div>
+        </Reveal>
 
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {items.slice(0, 6).map((item, i) => (
+        <Reveal className="grid grid-cols-2 md:grid-cols-3 gap-4 overflow-hidden">
+          {preview.map((item, i) => (
             <div
               key={item._id}
-              className={`relative overflow-hidden rounded-xl group ${i === 0 ? 'md:row-span-2' : ''}`}
+              onClick={() => setLightboxIndex(i)}
+              className={`relative overflow-hidden rounded-xl group cursor-pointer ${i === 0 ? 'md:row-span-2' : ''}`}
               style={{ aspectRatio: i === 0 ? undefined : '4/3' }}
             >
               <img
@@ -396,14 +406,14 @@ function GalleryPreview({ items }: { items: GalleryItem[] }) {
               />
               <div className="absolute inset-0 bg-teal-900/0 group-hover:bg-teal-900/40 transition-colors duration-300" />
               {item.caption && (
-                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-teal-900/80 to-transparent p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
+                <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-teal-900/80 to-transparent p-4 translate-y-0 sm:translate-y-full sm:group-hover:translate-y-0 transition-transform duration-300">
                   <p className="text-white text-sm font-medium">{item.caption}</p>
                 </div>
               )}
             </div>
           ))}
-        </div>
-      </Reveal>
+        </Reveal>
+      </div>
     </section>
   );
 }

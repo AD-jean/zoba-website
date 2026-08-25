@@ -32,8 +32,7 @@ function Mission() {
 
   return (
     <section className="py-24 bg-white">
-      <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
+      <Reveal className="grid lg:grid-cols-2 gap-16 items-center max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div>
             <p className="section-label">Notre mission</p>
             <h2 className="section-title mb-6">Une zone au service de Dieu et des hommes</h2>
@@ -67,7 +66,6 @@ function Mission() {
               </div>
             ))}
           </div>
-        </div>
       </Reveal>
     </section>
   );
@@ -81,11 +79,11 @@ function Leadership({ members }: { members: Member[] }) {
 
   return (
     <section className="py-24 bg-gray-50">
-      <Reveal className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <Reveal className="text-center mb-16">
           <p className="section-label">Leadership</p>
           <h2 className="section-title">Notre équipe dirigeante</h2>
-        </div>
+        </Reveal>
 
         {Object.entries(grouped).map(([org, list]) => list.length > 0 && (
           <div key={org} className="mb-14">
@@ -93,7 +91,7 @@ function Leadership({ members }: { members: Member[] }) {
               <span className="w-6 h-0.5 bg-teal-400" />
               {org === 'CBT' ? 'Convention Baptiste du Togo' : 'Bureau de Zone'}
             </h3>
-            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Reveal className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {list.map(member => (
                 <div key={member._id} className="card group text-center p-6">
                   <div className="w-20 h-20 rounded-full mx-auto mb-4 overflow-hidden bg-teal-100 flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
@@ -110,10 +108,10 @@ function Leadership({ members }: { members: Member[] }) {
                   )}
                 </div>
               ))}
-            </div>
+            </Reveal>
           </div>
         ))}
-      </Reveal>
+      </div>
     </section>
   );
 }

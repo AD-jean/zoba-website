@@ -116,6 +116,52 @@
   transform: scale(1.15) rotate(-6deg);
 }
 
+/* Effet d'assemblage au defilement (Reveal.tsx) : les enfants directs d'un groupe
+   .assemble-group partent d'un coin different (cycle de 8 directions via nth-child)
+   et convergent vers leur place en cascade. Une fois l'animation finie, la classe
+   passe a .has-settled qui fige l'etat final SANS animation active -- une animation
+   "forwards" encore active resterait sinon prioritaire sur les transitions au survol
+   (hover:-translate-y, etc.) portees par le meme element. */
+@keyframes assemble {
+  0% {
+    opacity: 0;
+    transform: translate(var(--ax, 0px), var(--ay, 28px)) rotate(var(--ar, 0deg)) scale(0.88);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+}
+.assemble-group > * {
+  opacity: 0;
+}
+.assemble-group.is-in-view > * {
+  animation: assemble 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.assemble-group.has-settled > * {
+  opacity: 1;
+}
+.assemble-group.is-in-view > *:nth-child(8n+1) { --ax: -56px; --ay: -36px; --ar: -9deg; }
+.assemble-group.is-in-view > *:nth-child(8n+2) { --ax: 56px;  --ay: -36px; --ar: 9deg; }
+.assemble-group.is-in-view > *:nth-child(8n+3) { --ax: -64px; --ay: 24px;  --ar: 7deg; }
+.assemble-group.is-in-view > *:nth-child(8n+4) { --ax: 64px;  --ay: 24px;  --ar: -7deg; }
+.assemble-group.is-in-view > *:nth-child(8n+5) { --ax: -36px; --ay: 48px;  --ar: -6deg; }
+.assemble-group.is-in-view > *:nth-child(8n+6) { --ax: 36px;  --ay: 48px;  --ar: 6deg; }
+.assemble-group.is-in-view > *:nth-child(8n+7) { --ax: -28px; --ay: -54px; --ar: 6deg; }
+.assemble-group.is-in-view > *:nth-child(8n+8) { --ax: 28px;  --ay: -54px; --ar: -6deg; }
+.assemble-group.is-in-view > *:nth-child(1)  { animation-delay: calc(var(--group-delay, 0ms) + 0ms); }
+.assemble-group.is-in-view > *:nth-child(2)  { animation-delay: calc(var(--group-delay, 0ms) + 70ms); }
+.assemble-group.is-in-view > *:nth-child(3)  { animation-delay: calc(var(--group-delay, 0ms) + 140ms); }
+.assemble-group.is-in-view > *:nth-child(4)  { animation-delay: calc(var(--group-delay, 0ms) + 210ms); }
+.assemble-group.is-in-view > *:nth-child(5)  { animation-delay: calc(var(--group-delay, 0ms) + 280ms); }
+.assemble-group.is-in-view > *:nth-child(6)  { animation-delay: calc(var(--group-delay, 0ms) + 350ms); }
+.assemble-group.is-in-view > *:nth-child(7)  { animation-delay: calc(var(--group-delay, 0ms) + 420ms); }
+.assemble-group.is-in-view > *:nth-child(8)  { animation-delay: calc(var(--group-delay, 0ms) + 490ms); }
+.assemble-group.is-in-view > *:nth-child(9)  { animation-delay: calc(var(--group-delay, 0ms) + 560ms); }
+.assemble-group.is-in-view > *:nth-child(10) { animation-delay: calc(var(--group-delay, 0ms) + 630ms); }
+.assemble-group.is-in-view > *:nth-child(11) { animation-delay: calc(var(--group-delay, 0ms) + 700ms); }
+.assemble-group.is-in-view > *:nth-child(n+12) { animation-delay: calc(var(--group-delay, 0ms) + 770ms); }
+
 /* Lightbox galerie : sur petit ecran, ouverture en simple scale (sans rotateX) pour eviter
    tout jank sur mobile -- voir pages/GalleryPage.tsx. */
 @media (max-width: 767px) {
@@ -125,6 +171,24 @@
   .animate-lightbox-out {
     animation: scaleOut 0.2s ease-in forwards;
   }
+}
+
+/* Empeche le zoom automatique de Safari iOS a la mise au point d'un champ dont le
+   font-size calcule est < 16px (cas de tous nos inputs en text-sm). Limite au mobile
+   pour ne pas toucher la taille de texte voulue sur desktop. */
+@media (max-width: 640px) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Hauteur d'ecran fiable sur mobile : 100vh deborde derriere la barre d'adresse
+   dynamique de Safari/Chrome mobile. 100svh (hauteur visible reelle) prend le relais
+   quand le navigateur le supporte ; sinon cette 2e declaration est simplement ignoree
+   et 100vh reste actif. */
+.min-h-mobile-screen {
+  min-height: 100vh;
+  min-height: 100svh;
 }
 
 /* Respecte la préférence de mouvement réduit : les transitions/animations

@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
-import { X, ZoomIn } from 'lucide-react';
+import { ZoomIn } from 'lucide-react';
 import { galleryApi } from '../lib/api';
 import Reveal from '../components/Reveal';
 import TiltCard from '../components/TiltCard';
+import GalleryLightbox from '../components/GalleryLightbox';
 import type { GalleryItem, Department } from '../types/database';
 
 const DEPARTMENTS: Department[] = ['Tous', 'Hommes', 'Femmes', 'Jeunesse', 'Enfants'];
@@ -10,8 +11,7 @@ const DEPARTMENTS: Department[] = ['Tous', 'Hommes', 'Femmes', 'Jeunesse', 'Enfa
 export default function GalleryPage() {
   const [items, setItems] = useState<GalleryItem[]>([]);
   const [filter, setFilter] = useState<Department>('Tous');
-  const [lightbox, setLightbox] = useState<GalleryItem | null>(null);
-  const [closing, setClosing] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -20,36 +20,14 @@ export default function GalleryPage() {
       .then((data: GalleryItem[]) => { setItems(data); setLoading(false); });
   }, [filter]);
 
-  const closeLightbox = () => {
-    setClosing(true);
-    setTimeout(() => { setLightbox(null); setClosing(false); }, 200);
-  };
-
   return (
     <>
-      {lightbox && (
-        <div
-          className={`fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4 tilt-wrap transition-opacity duration-200 ${closing ? 'opacity-0' : 'animate-fade-in'}`}
-          onClick={closeLightbox}
-        >
-          <button
-            onClick={closeLightbox}
-            className="absolute top-4 right-4 text-white/70 hover:text-white hover:rotate-90 transition-all duration-200"
-          >
-            <X size={28} />
-          </button>
-          <img
-            src={`${lightbox.image}?auto=compress&cs=tinysrgb&w=1400`}
-            alt={lightbox.caption || ''}
-            className={`max-w-full max-h-full rounded-xl object-contain ${closing ? 'animate-lightbox-out' : 'animate-lightbox-in'}`}
-            onClick={e => e.stopPropagation()}
-          />
-          {lightbox.caption && (
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-black/60 text-white px-4 py-2 rounded-lg text-sm">
-              {lightbox.caption}
-            </div>
-          )}
-        </div>
+      {lightboxIndex !== null && (
+        <GalleryLightbox
+          items={items}
+          startIndex={lightboxIndex}
+          onClose={() => setLightboxIndex(null)}
+        />
       )}
 
       <section className="relative pt-32 pb-20 bg-teal-800 overflow-hidden">
@@ -95,14 +73,14 @@ export default function GalleryPage() {
               <p>Aucune photo disponible pour ce filtre.</p>
             </div>
           ) : (
-            <Reveal className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
-              {items.map(item => (
+            <Reveal className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4 overflow-hidden">
+              {items.map((item, i) => (
                 <TiltCard
                   key={item._id}
                   max={5}
                   wrapClassName="break-inside-avoid"
                   className="relative rounded-xl overflow-hidden cursor-pointer group transition-shadow duration-300 hover:shadow-lg"
-                  onClick={() => setLightbox(item)}
+                  onClick={() => setLightboxIndex(i)}
                 >
                   <img
                     src={`${item.image}?auto=compress&cs=tinysrgb&w=600`}
