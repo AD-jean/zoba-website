@@ -135,6 +135,8 @@ export default function Footer() {
               <form onSubmit={subscribe} className="space-y-2">
                 <input
                   type="email"
+                  inputMode="email"
+                  autoComplete="email"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                   placeholder="Votre adresse e-mail"

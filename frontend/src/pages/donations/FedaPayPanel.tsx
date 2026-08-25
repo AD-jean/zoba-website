@@ -97,20 +97,26 @@ export default function FedaPayPanel({ amount }: FedaPayPanelProps) {
 
       <div className="space-y-3 mb-4">
         <input
+          autoComplete="name"
           value={donor.name}
           onChange={e => setDonor(d => ({ ...d, name: e.target.value }))}
           placeholder="Nom complet (optionnel)"
           className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
         />
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <input
             type="email"
+            inputMode="email"
+            autoComplete="email"
             value={donor.email}
             onChange={e => setDonor(d => ({ ...d, email: e.target.value }))}
             placeholder="E-mail (optionnel)"
             className="w-full border border-gray-300 rounded-xl px-4 py-2.5 text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-emerald-500"
           />
           <input
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
             value={donor.phone}
             onChange={e => setDonor(d => ({ ...d, phone: e.target.value }))}
             placeholder="Téléphone (optionnel)"

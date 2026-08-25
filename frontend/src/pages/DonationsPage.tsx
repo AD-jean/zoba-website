@@ -112,6 +112,7 @@ function ManualMethodPanel({ method, amount }: { method: 'Moov' | 'Mixx' | 'PayP
     <form onSubmit={submit} className={`rounded-2xl border-2 bg-white p-6 space-y-4 animate-fade-in ${color}`}>
       <p className="text-sm text-gray-500">{instructions}</p>
       <input
+        autoComplete="name"
         value={donor.name}
         onChange={e => setDonor(d => ({ ...d, name: e.target.value }))}
         placeholder="Nom complet (optionnel)"
@@ -119,6 +120,8 @@ function ManualMethodPanel({ method, amount }: { method: 'Moov' | 'Mixx' | 'PayP
       />
       <input
         type="email"
+        inputMode="email"
+        autoComplete="email"
         value={donor.email}
         onChange={e => setDonor(d => ({ ...d, email: e.target.value }))}
         placeholder="E-mail (optionnel)"
@@ -182,7 +185,7 @@ export default function DonationsPage() {
             </div>
           )}
 
-          <div className="bg-white rounded-2xl shadow-sm p-8 space-y-8">
+          <div className="bg-white rounded-2xl shadow-sm p-5 sm:p-8 space-y-8">
             {/* Amount */}
             <div>
               <h3 className="font-bold text-teal-800 mb-4 flex items-center gap-2">
@@ -209,6 +212,7 @@ export default function DonationsPage() {
                 <label className="block text-sm text-gray-600 mb-1.5">Autre montant</label>
                 <input
                   type="number"
+                  inputMode="numeric"
                   min="100"
                   value={customAmount}
                   onChange={e => { setCustomAmount(e.target.value); setAmount(''); }}

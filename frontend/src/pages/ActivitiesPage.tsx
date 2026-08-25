@@ -58,10 +58,10 @@ function RegistrationModal({ activity, onClose }: { activity: Activity; onClose:
       onClick={requestClose}
     >
       <div
-        className={`bg-white rounded-2xl shadow-2xl w-full max-w-md ${closing ? 'animate-scale-out' : 'animate-scale-in'}`}
+        className={`bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto ${closing ? 'animate-scale-out' : 'animate-scale-in'}`}
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between p-6 border-b">
+        <div className="flex items-start justify-between p-6 border-b sticky top-0 bg-white rounded-t-2xl z-10">
           <div>
             <h3 className="font-bold text-teal-800 text-lg">
               {step === 'payment' ? 'Paiement du billet' : "S'inscrire à l'activité"}
@@ -126,6 +126,7 @@ function RegistrationModal({ activity, onClose }: { activity: Activity; onClose:
               <label className="block text-sm font-medium text-gray-700 mb-1">Nom complet *</label>
               <input
                 required
+                autoComplete="name"
                 value={form.name}
                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
@@ -137,6 +138,8 @@ function RegistrationModal({ activity, onClose }: { activity: Activity; onClose:
               <input
                 required
                 type="email"
+                inputMode="email"
+                autoComplete="email"
                 value={form.email}
                 onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
@@ -147,6 +150,9 @@ function RegistrationModal({ activity, onClose }: { activity: Activity; onClose:
               <label className="block text-sm font-medium text-gray-700 mb-1">Téléphone</label>
               <input
                 required={isPaid}
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
                 value={form.phone}
                 onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"

@@ -118,6 +118,8 @@ export default function StripePanel({ amount }: StripePanelProps) {
 
       <input
         type="email"
+        inputMode="email"
+        autoComplete="email"
         value={email}
         onChange={e => setEmail(e.target.value)}
         placeholder="E-mail pour le reçu (optionnel)"

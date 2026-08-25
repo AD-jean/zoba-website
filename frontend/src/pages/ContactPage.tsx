@@ -108,7 +108,7 @@ export default function ContactPage() {
                   </button>
                 </div>
               ) : (
-                <form onSubmit={submit} className="space-y-5 bg-gray-50 rounded-2xl p-8">
+                <form onSubmit={submit} className="space-y-5 bg-gray-50 rounded-2xl p-5 sm:p-8">
                   <h2 className="text-xl font-bold text-teal-800 mb-6">Envoyez-nous un message</h2>
 
                   <div className="grid sm:grid-cols-2 gap-5">
@@ -116,6 +116,7 @@ export default function ContactPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">Nom complet *</label>
                       <input
                         required
+                        autoComplete="name"
                         value={form.name}
                         onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                         className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
@@ -125,6 +126,9 @@ export default function ContactPage() {
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1.5">Téléphone</label>
                       <input
+                        type="tel"
+                        inputMode="tel"
+                        autoComplete="tel"
                         value={form.phone}
                         onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
                         className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
@@ -138,6 +142,8 @@ export default function ContactPage() {
                     <input
                       required
                       type="email"
+                      inputMode="email"
+                      autoComplete="email"
                       value={form.email}
                       onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                       className="w-full border border-gray-300 rounded-xl px-4 py-3 text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white"
