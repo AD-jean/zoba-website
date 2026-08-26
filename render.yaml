@@ -1,0 +1,53 @@
+services:
+  - type: web
+    name: zoba-api
+    runtime: node
+    plan: free
+    region: frankfurt
+    rootDir: backend
+    # NODE_ENV=production fait que `npm install` ignore les devDependencies :
+    # or tsc / @types / tsx y sont. --include=dev force leur installation pour le build.
+    buildCommand: npm install --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # PORT est injecte automatiquement par Render, ne pas le definir.
+      # Les valeurs ci-dessous sont a renseigner dans le dashboard Render
+      # (Environment) — sync: false = jamais stockees dans le repo.
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      # URL(s) du frontend autorisee(s) en CORS. Plusieurs valeurs possibles
+      # separees par des virgules (ex: https://zoba.vercel.app,https://www.zoba-cbt.org)
+      - key: FRONTEND_URL
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: FEDAPAY_SECRET_KEY
+        sync: false
+      - key: FEDAPAY_WEBHOOK_SECRET
+        sync: false
+      - key: FEDAPAY_ENV
+        value: sandbox
+      - key: FEDAPAY_CALLBACK_URL
+        sync: false
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
+      - key: RESEND_API_KEY
+        sync: false
+      - key: EMAIL_FROM
+        sync: false
