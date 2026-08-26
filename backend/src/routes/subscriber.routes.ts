@@ -4,11 +4,13 @@ import Subscriber from '../models/Subscriber.model';
 import { protect, AuthRequest } from '../middleware/auth.middleware';
 import { asyncHandler } from '../middleware/asyncHandler';
 import { validate } from '../middleware/validate';
+import { publicFormLimiter } from '../middleware/rateLimit';
 
 const router = Router();
 
 router.post(
   '/',
+  publicFormLimiter,
   [body('email').isEmail().withMessage('Email invalide')],
   validate,
   asyncHandler(async (req, res) => {
@@ -32,6 +34,7 @@ router.post(
 
 router.delete(
   '/unsubscribe',
+  publicFormLimiter,
   [body('email').isEmail().withMessage('Email invalide')],
   validate,
   asyncHandler(async (req, res) => {

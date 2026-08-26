@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import { body, param, query } from 'express-validator';
 import News from '../models/News.model';
-import { protect, AuthRequest } from '../middleware/auth.middleware';
+import { protect, hasValidAdminToken, AuthRequest } from '../middleware/auth.middleware';
 import { asyncHandler } from '../middleware/asyncHandler';
 import { validate } from '../middleware/validate';
 
@@ -25,12 +25,14 @@ router.get(
     const { limit, category } = req.query;
     const filter: Record<string, unknown> = { published: true };
 
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith('Bearer ')) {
+    // Un admin authentifié (jeton vérifié) voit aussi les brouillons.
+    if (hasValidAdminToken(req)) {
       delete filter.published;
     }
 
-    if (category) filter.category = category;
+    // typeof string => neutralise une injection d'opérateur MongoDB
+    // du type ?category[$ne]=x (req.query.category serait alors un objet).
+    if (typeof category === 'string') filter.category = category;
 
     let query = News.find(filter).sort({ publishedAt: -1 });
     if (limit) query = query.limit(parseInt(limit as string));

@@ -5,6 +5,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Zone Baptiste Agapé — ZOBA</title>
     <meta name="description" content="Zone Baptiste Agapé (ZOBA) — Fraternité, Foi et Service au sein de la Convention Baptiste du Togo." />
+
+    <!-- Adresse de référence du site. Remplacer zoba-cbt.org par le vrai domaine si différent (ici et dans robots.txt / sitemap.xml). -->
+    <link rel="canonical" href="https://zoba-cbt.org/" />
+
+    <!-- Aperçu de lien (Open Graph / Twitter). Statique : c'est la carte de l'accueil,
+         affichée pour toute page tant qu'il n'y a pas de rendu par page (voir docs/seo-zoba-v1.md, niveau 2). -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Zone Baptiste Agapé — ZOBA" />
+    <meta property="og:title" content="Zone Baptiste Agapé — ZOBA" />
+    <meta property="og:description" content="Fraternité, Foi et Service au sein de la Convention Baptiste du Togo. Activités, actualités, dons en ligne." />
+    <meta property="og:url" content="https://zoba-cbt.org/" />
+    <meta property="og:image" content="https://zoba-cbt.org/android-chrome-512x512.png" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="Zone Baptiste Agapé — ZOBA" />
+    <meta name="twitter:description" content="Fraternité, Foi et Service au sein de la Convention Baptiste du Togo. Activités, actualités, dons en ligne." />
+    <meta name="twitter:image" content="https://zoba-cbt.org/android-chrome-512x512.png" />
+
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
@@ -14,6 +32,26 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@600;700;800&display=swap" rel="stylesheet" />
+
+    <!-- Fiche Organisation : aide les recherches de marque ("Zone Baptiste Agapé").
+         Ajouter les URL des réseaux dans "sameAs" une fois renseignées dans le footer. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": "Zone Baptiste Agapé",
+        "alternateName": "ZOBA",
+        "url": "https://zoba-cbt.org/",
+        "logo": "https://zoba-cbt.org/android-chrome-512x512.png",
+        "description": "Zone d'églises de la Convention Baptiste du Togo — fraternité, foi et service.",
+        "parentOrganization": {
+          "@type": "Organization",
+          "name": "Convention Baptiste du Togo"
+        },
+        "areaServed": "TG",
+        "sameAs": []
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

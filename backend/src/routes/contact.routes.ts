@@ -4,11 +4,13 @@ import Contact from '../models/Contact.model';
 import { protect, AuthRequest } from '../middleware/auth.middleware';
 import { asyncHandler } from '../middleware/asyncHandler';
 import { validate } from '../middleware/validate';
+import { publicFormLimiter } from '../middleware/rateLimit';
 
 const router = Router();
 
 router.post(
   '/',
+  publicFormLimiter,
   [
     body('name').isString().trim().notEmpty().withMessage('Nom requis'),
     body('email').isEmail().withMessage('Email invalide'),

@@ -1,6 +1,8 @@
 import express from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import mongoose from 'mongoose';
+import { loginLimiter } from './middleware/rateLimit';
 import authRoutes from './routes/auth.routes';
 import memberRoutes from './routes/member.routes';
 import activityRoutes from './routes/activity.routes';
@@ -15,6 +17,22 @@ import uploadRoutes from './routes/upload.routes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
 const app = express();
+
+// Un seul proxy inverse attendu devant l'API en production (hébergeur type
+// Render/Railway/Nginx). Nécessaire pour que la limitation de débit voie la
+// vraie IP du client via X-Forwarded-For, sans pour autant faire confiance à
+// une chaîne de proxys arbitraire.
+app.set('trust proxy', 1);
+
+// En-têtes de sécurité (HSTS, nosniff, anti-clickjacking, Referrer-Policy...)
+// et masquage de la signature « X-Powered-By: Express ».
+// CSP désactivée ici : cette API ne sert que du JSON, la politique de contenu
+// se règle côté hébergement du frontend. CORP en cross-origin pour ne pas
+// gêner la consommation de l'API par le frontend.
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginResourcePolicy: { policy: 'cross-origin' }
+}));
 
 const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
   .split(',')
@@ -32,6 +50,7 @@ app.use('/api/donations/webhook', express.raw({ type: 'application/json' }), don
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.use('/api/auth/login', loginLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/members', memberRoutes);
 app.use('/api/activities', activityRoutes);
