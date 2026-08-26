@@ -196,6 +196,26 @@ npm run build:backend
 cd backend && npm start
 ```
 
+## Hébergement
+
+- **Backend** → Render (`render.yaml` à la racine : service Node `zoba-api`, `rootDir: backend`, health check `/api/health`). Variables secrètes en `sync: false`, à saisir dans le dashboard.
+- **Frontend** → Vercel (`frontend/vercel.json` : preset Vite + rewrite SPA vers `/index.html` pour react-router). Root Directory = `frontend`, `VITE_API_URL` = URL Render + `/api`.
+- `FRONTEND_URL` (backend) doit contenir l'URL Vercel exacte — c'est ce qui pilote le CORS (plusieurs origines possibles, séparées par des virgules).
+
+### Garder le backend Render actif (UptimeRobot)
+
+Le plan gratuit Render met le service en veille après 15 min sans trafic (réveil ~30-50 s au 1er accès). Un ping périodique le garde éveillé :
+
+1. Compte gratuit sur [uptimerobot.com](https://uptimerobot.com).
+2. **Add New Monitor** :
+   - **Type** : `Keyword`
+   - **URL** : `https://<zoba-api>.onrender.com/api/health`
+   - **Keyword type** : `exists` — **Keyword** : `ok`
+   - **Monitoring interval** : `5 minutes`
+3. Le monitor `Keyword` sur `"status":"ok"` reste UP tant que MongoDB est connecté, et bascule DOWN (alerte e-mail) si `/api/health` renvoie `503` (`"status":"degraded"`) — donc le ping sert aussi de supervision réelle, pas seulement de keep-alive.
+
+> Un intervalle de 5 min sur un seul service ≈ 730 h/mois, dans l'enveloppe gratuite Render (750 instance-hours/mois pour un service).
+
 ## Administration
 
 - URL : `/admin`
