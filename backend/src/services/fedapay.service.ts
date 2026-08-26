@@ -26,14 +26,15 @@ interface CreateTransactionParams {
   donorName?: string;
   donorEmail?: string;
   donorPhone?: string;
+  callbackUrl?: string;
 }
 
 /**
- * Cree la transaction cote serveur (montant valide) sans generer de lien de
- * paiement hebergee : le widget Checkout.js du frontend prend le relais avec
- * cet id + la cle publique pour afficher le paiement en place ("pre-created
- * transaction" flow documente par FedaPay), sans jamais laisser le client
- * choisir le montant lui-meme.
+ * Cree la transaction cote serveur (montant valide). L'appelant choisit ensuite comment
+ * la faire payer : soit via generateCheckoutUrl (redirection complete vers FedaPay), soit
+ * via le widget Checkout.js embarque cote frontend avec cet id + la cle publique
+ * ("pre-created transaction" flow documente par FedaPay) -- dans les deux cas, le client
+ * ne choisit jamais le montant lui-meme.
  */
 export const createTransaction = async ({
   amount,
@@ -42,11 +43,11 @@ export const createTransaction = async ({
   metadata,
   donorName,
   donorEmail,
-  donorPhone
+  donorPhone,
+  callbackUrl = process.env.FEDAPAY_CALLBACK_URL
 }: CreateTransactionParams): Promise<number> => {
   const secretKey = getSecretKey();
   const baseUrl = getBaseUrl();
-  const callbackUrl = process.env.FEDAPAY_CALLBACK_URL;
 
   const createRes = await fetch(`${baseUrl}/v1/transactions`, {
     method: 'POST',
@@ -84,6 +85,31 @@ export const createTransaction = async ({
     throw new AppError(502, 'Impossible de creer la transaction FedaPay');
   }
   return transaction.id;
+};
+
+/**
+ * Genere l'URL de paiement hebergee FedaPay pour une transaction deja creee (endpoint
+ * "token"). Utilise pour les flux qui redirigent entierement le client vers FedaPay,
+ * par opposition au widget Checkout.js embarque sur place (cf. createTransaction).
+ */
+export const generateCheckoutUrl = async (transactionId: number): Promise<string> => {
+  const secretKey = getSecretKey();
+  const baseUrl = getBaseUrl();
+
+  const tokenRes = await fetch(`${baseUrl}/v1/transactions/${transactionId}/token`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${secretKey}` }
+  });
+
+  if (!tokenRes.ok) {
+    throw new AppError(502, 'Impossible de generer le lien de paiement FedaPay');
+  }
+
+  const body = (await tokenRes.json()) as { url?: string };
+  if (!body.url) {
+    throw new AppError(502, 'Impossible de generer le lien de paiement FedaPay');
+  }
+  return body.url;
 };
 
 interface FedapayEvent {

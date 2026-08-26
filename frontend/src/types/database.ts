@@ -107,7 +107,7 @@ export interface Donation {
   _id: string;
   amount: number;
   currency: string;
-  paymentMethod: 'PayPal' | 'Mixx' | 'Moov';
+  paymentMethod: 'PayPal' | 'Stripe' | 'FedaPay';
   donorName?: string;
   donorEmail?: string;
   status: 'pending' | 'completed' | 'failed';

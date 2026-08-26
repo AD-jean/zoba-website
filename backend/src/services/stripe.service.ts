@@ -50,6 +50,58 @@ export const createPaymentIntent = async ({
   return intent.client_secret;
 };
 
+interface CreateCheckoutSessionParams {
+  amount: number;
+  currency: string;
+  metadata: Record<string, string>;
+  donorEmail?: string;
+  successUrl: string;
+  cancelUrl: string;
+}
+
+export const createCheckoutSession = async ({
+  amount,
+  currency,
+  metadata,
+  donorEmail,
+  successUrl,
+  cancelUrl
+}: CreateCheckoutSessionParams): Promise<string> => {
+  const stripe = getClient();
+
+  let session: Stripe.Checkout.Session;
+  try {
+    session = await stripe.checkout.sessions.create({
+      mode: 'payment',
+      line_items: [
+        {
+          price_data: {
+            currency: currency.toLowerCase(),
+            unit_amount: toStripeUnitAmount(amount, currency),
+            product_data: { name: 'Don - Zone Baptiste Agapé' }
+          },
+          quantity: 1
+        }
+      ],
+      customer_email: donorEmail,
+      metadata,
+      // payment_intent recoit aussi les metadata : le webhook payment_intent.succeeded
+      // (deja utilise par les inscriptions) peut ainsi retrouver donationId sans changement.
+      payment_intent_data: { metadata },
+      success_url: successUrl,
+      cancel_url: cancelUrl
+    });
+  } catch {
+    throw new AppError(502, 'Impossible de creer le paiement Stripe');
+  }
+
+  if (!session.url) {
+    throw new AppError(502, 'Impossible de creer le paiement Stripe');
+  }
+
+  return session.url;
+};
+
 export const constructWebhookEvent = (rawBody: Buffer, signature: string): Stripe.Event => {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   if (!webhookSecret) {

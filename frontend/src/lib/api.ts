@@ -212,8 +212,8 @@ export const donationsApi = {
 
   checkout: (data: { amount: number; currency?: string; provider: 'stripe' | 'fedapay'; donorName?: string; donorEmail?: string; donorPhone?: string }) =>
     apiRequest<
-      | { provider: 'stripe'; clientSecret: string }
-      | { provider: 'fedapay'; transactionId: number }
+      | { provider: 'stripe'; url: string }
+      | { provider: 'fedapay'; url: string }
     >('/donations/checkout', { method: 'POST', body: JSON.stringify(data) }),
 
   getAll: (filters?: { status?: string }) => {

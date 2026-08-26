@@ -5,7 +5,7 @@ import { donationsApi } from '../lib/api';
 import StripePanel from './donations/StripePanel';
 import FedaPayPanel from './donations/FedaPayPanel';
 
-type Method = 'PayPal' | 'Mixx' | 'Moov' | 'Stripe' | 'FedaPay';
+type Method = 'PayPal' | 'Stripe' | 'FedaPay';
 
 const AMOUNTS = [1000, 2500, 5000, 10000, 25000];
 
@@ -34,22 +34,6 @@ const METHODS: {
     idleHoverClasses: 'hover:border-emerald-300',
   },
   {
-    id: 'Moov',
-    label: 'Moov Money',
-    tagline: 'Paiement direct Moov',
-    icon: <Smartphone size={20} />,
-    selectedClasses: 'border-blue-600 bg-blue-50 text-blue-700',
-    idleHoverClasses: 'hover:border-blue-300',
-  },
-  {
-    id: 'Mixx',
-    label: 'Mixx by Yas',
-    tagline: 'Paiement direct Mixx',
-    icon: <Smartphone size={20} />,
-    selectedClasses: 'border-orange-600 bg-orange-50 text-orange-700',
-    idleHoverClasses: 'hover:border-orange-300',
-  },
-  {
     id: 'PayPal',
     label: 'PayPal',
     tagline: 'Paiement direct PayPal',
@@ -59,17 +43,7 @@ const METHODS: {
   },
 ];
 
-const MANUAL_METHODS: Record<'Moov' | 'Mixx' | 'PayPal', { color: string; button: string; instructions: string }> = {
-  Moov: {
-    color: 'text-blue-700 border-blue-600/20',
-    button: 'bg-blue-600 hover:bg-blue-700',
-    instructions: 'Nous vous recontacterons pour finaliser ce don par Moov Money.',
-  },
-  Mixx: {
-    color: 'text-orange-700 border-orange-600/20',
-    button: 'bg-orange-600 hover:bg-orange-700',
-    instructions: 'Nous vous recontacterons pour finaliser ce don par Mixx by Yas.',
-  },
+const MANUAL_METHODS: Record<'PayPal', { color: string; button: string; instructions: string }> = {
   PayPal: {
     color: 'text-[#0070BA] border-[#0070BA]/20',
     button: 'bg-[#0070BA] hover:bg-[#005c99]',
@@ -77,7 +51,7 @@ const MANUAL_METHODS: Record<'Moov' | 'Mixx' | 'PayPal', { color: string; button
   },
 };
 
-function ManualMethodPanel({ method, amount }: { method: 'Moov' | 'Mixx' | 'PayPal'; amount: number }) {
+function ManualMethodPanel({ method, amount }: { method: 'PayPal'; amount: number }) {
   const [donor, setDonor] = useState({ name: '', email: '' });
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const { color, button, instructions } = MANUAL_METHODS[method];
@@ -155,7 +129,7 @@ export default function DonationsPage() {
 
   return (
     <>
-      <section className="relative pt-32 pb-20 bg-teal-800 overflow-hidden">
+      <section className="relative pt-32 pb-20 bg-gradient-animated overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-10 right-10 w-72 h-72 bg-white rounded-full blur-3xl" />
         </div>
@@ -255,7 +229,7 @@ export default function DonationsPage() {
               <div className="animate-fade-in">
                 {method === 'Stripe' && <StripePanel amount={finalAmount} />}
                 {method === 'FedaPay' && <FedaPayPanel amount={finalAmount} />}
-                {(method === 'Moov' || method === 'Mixx' || method === 'PayPal') && (
+                {method === 'PayPal' && (
                   <ManualMethodPanel method={method} amount={finalAmount} />
                 )}
               </div>

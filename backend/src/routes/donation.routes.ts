@@ -128,15 +128,19 @@ router.post(
       status: 'pending'
     });
 
+    const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').split(',')[0].trim();
+
     try {
       if (provider === 'stripe') {
-        const clientSecret = await stripeService.createPaymentIntent({
+        const url = await stripeService.createCheckoutSession({
           amount,
           currency: finalCurrency,
           metadata: { donationId: donation._id.toString() },
-          donorEmail
+          donorEmail,
+          successUrl: `${frontendUrl}/dons?payment=success`,
+          cancelUrl: `${frontendUrl}/dons?payment=cancel`
         });
-        return res.json({ provider: 'stripe', clientSecret });
+        return res.json({ provider: 'stripe', url });
       }
 
       const transactionId = await fedapayService.createTransaction({
@@ -146,9 +150,11 @@ router.post(
         metadata: { donationId: donation._id.toString() },
         donorName,
         donorEmail,
-        donorPhone
+        donorPhone,
+        callbackUrl: `${frontendUrl}/dons?payment=success`
       });
-      return res.json({ provider: 'fedapay', transactionId });
+      const url = await fedapayService.generateCheckoutUrl(transactionId);
+      return res.json({ provider: 'fedapay', url });
     } catch (err) {
       donation.status = 'failed';
       await donation.save();
