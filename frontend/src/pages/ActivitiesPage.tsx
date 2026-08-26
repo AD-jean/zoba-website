@@ -192,7 +192,7 @@ export default function ActivitiesPage() {
     <>
       {selected && <RegistrationModal activity={selected} onClose={() => setSelected(null)} />}
 
-      <section className="relative pt-32 pb-20 bg-teal-800 overflow-hidden">
+      <section className="relative pt-32 pb-20 bg-gradient-animated overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-10 right-10 w-72 h-72 bg-white rounded-full blur-3xl" />
         </div>

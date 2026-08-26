@@ -111,7 +111,9 @@ export default function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <Phone size={14} className="flex-shrink-0 text-teal-400" />
-                +228 XX XX XX XX
+                <a href="tel:+22891754415" className="hover:text-white transition-colors">
+                  +228 91 75 44 15
+                </a>
               </li>
               <li className="flex items-center gap-2">
                 <Mail size={14} className="flex-shrink-0 text-teal-400" />
@@ -162,9 +164,6 @@ export default function Footer() {
 
         <div className="mt-12 pt-8 border-t border-teal-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-teal-500">
           <p>© {new Date().getFullYear()} Zone Baptiste Agapé — ZOBA. Tous droits réservés.</p>
-          <Link to="/admin" className="hover:text-teal-300 transition-colors">
-            Espace Admin
-          </Link>
         </div>
       </div>
     </footer>

@@ -26,7 +26,7 @@ function Hero() {
           alt=""
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-teal-900/95 via-teal-800/80 to-teal-700/40" />
+        <div className="absolute inset-0 hero-gradient-overlay" />
       </div>
 
       <OrganicFloat variant="hero" />
