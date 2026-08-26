@@ -4,6 +4,7 @@ import Donation from '../models/Donation.model';
 import { protect, AuthRequest } from '../middleware/auth.middleware';
 import { asyncHandler } from '../middleware/asyncHandler';
 import { validate } from '../middleware/validate';
+import { publicFormLimiter } from '../middleware/rateLimit';
 import * as stripeService from '../services/stripe.service';
 import * as fedapayService from '../services/fedapay.service';
 
@@ -20,6 +21,7 @@ const donorFieldValidators = [
 
 router.post(
   '/',
+  publicFormLimiter,
   [
     body('amount').isFloat({ gt: 0, lt: MAX_AMOUNT }).withMessage('Montant invalide'),
     body('currency').optional().isIn(ALLOWED_CURRENCIES).withMessage('Devise non supportee'),
@@ -103,6 +105,7 @@ router.delete(
 
 router.post(
   '/checkout',
+  publicFormLimiter,
   [
     body('amount').isFloat({ gt: 0, lt: MAX_AMOUNT }).withMessage('Montant invalide'),
     body('currency').optional().isIn(ALLOWED_CURRENCIES).withMessage('Devise non supportee'),

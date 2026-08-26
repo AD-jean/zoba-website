@@ -5,6 +5,24 @@ export interface AuthRequest extends Request {
   adminId?: string;
 }
 
+// Vérifie réellement le jeton admin d'une requête (signature + expiration),
+// sans bloquer si absent. Pour les routes publiques qui exposent un peu plus
+// de données à un admin authentifié (ex. brouillons d'actualités).
+export const hasValidAdminToken = (req: Request): boolean => {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return false;
+
+  const secret = process.env.JWT_SECRET;
+  if (!secret) return false;
+
+  try {
+    jwt.verify(authHeader.split(' ')[1], secret);
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export const protect = (req: AuthRequest, res: Response, next: NextFunction): void => {
   const authHeader = req.headers.authorization;
 

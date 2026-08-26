@@ -5,6 +5,7 @@ import Activity, { IActivity } from '../models/Activity.model';
 import { protect, AuthRequest } from '../middleware/auth.middleware';
 import { asyncHandler } from '../middleware/asyncHandler';
 import { validate } from '../middleware/validate';
+import { publicFormLimiter } from '../middleware/rateLimit';
 import { generateTicketCode, generateQrDataUrl, ticketUrl } from '../services/ticket.service';
 import { sendTicketEmail } from '../services/email.service';
 import { generateTicketPdf } from '../services/pdf.service';
@@ -74,6 +75,7 @@ const checkNoDuplicateRegistration = async (activityId: string, email: string) =
 
 router.post(
   '/',
+  publicFormLimiter,
   registrantFieldValidators,
   validate,
   asyncHandler(async (req, res) => {
@@ -116,6 +118,7 @@ router.post(
 
 router.post(
   '/checkout',
+  publicFormLimiter,
   [...registrantFieldValidators, body('provider').isIn(['stripe', 'fedapay']).withMessage('Fournisseur de paiement invalide')],
   validate,
   asyncHandler(async (req, res) => {

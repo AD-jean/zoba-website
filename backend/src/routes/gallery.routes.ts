@@ -29,7 +29,9 @@ router.get(
     const { category, department, limit } = req.query;
     const filter: Record<string, unknown> = {};
 
-    if (category) filter.category = category;
+    // typeof string => neutralise une injection d'opérateur MongoDB
+    // du type ?category[$ne]=x (req.query.category serait alors un objet).
+    if (typeof category === 'string') filter.category = category;
     if (department) filter.department = department;
 
     let query = Gallery.find(filter).sort({ createdAt: -1 });
