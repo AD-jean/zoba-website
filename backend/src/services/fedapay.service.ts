@@ -169,3 +169,81 @@ export const constructWebhookEvent = (rawBody: string, signatureHeader: string |
     throw new AppError(400, 'Corps du webhook invalide');
   }
 };
+
+// ============ PAIEMENT MOBILE MONEY SANS REDIRECTION ============
+// Meme experience que les plateformes de vote/billetterie locales : le donateur choisit son
+// operateur, saisit son numero, et valide le paiement directement sur son telephone (push
+// USSD) sans quitter le site. Doc : POST /v1/transactions/{id}/token puis POST /v1/{mode}.
+
+/** Operateurs Togo disponibles "sans redirection" chez FedaPay (cle = valeur exposee au frontend). */
+export const MOBILE_OPERATORS = {
+  moov_tg: { label: 'Moov Money', mode: 'moov_tg' },
+  togocel: { label: 'Mixx by Yas', mode: 'togocel' }
+} as const;
+
+export type MobileOperator = keyof typeof MOBILE_OPERATORS;
+
+/**
+ * En sandbox, FedaPay n'accepte plus que le mode unique "momo_test" (changelog du
+ * 07/11/2025) : numeros 64000001 / 66000001 = succes, tout autre numero = echec.
+ */
+const resolveMode = (operator: MobileOperator): string =>
+  process.env.FEDAPAY_ENV === 'live' ? MOBILE_OPERATORS[operator].mode : 'momo_test';
+
+const generateToken = async (transactionId: number): Promise<string> => {
+  const res = await fetch(`${getBaseUrl()}/v1/transactions/${transactionId}/token`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${getSecretKey()}` }
+  });
+  const body = (await res.json().catch(() => ({}))) as { token?: string };
+  if (!res.ok || !body.token) {
+    throw new AppError(502, 'Impossible de preparer le paiement Mobile Money');
+  }
+  return body.token;
+};
+
+/**
+ * Declenche la demande de paiement sur le telephone du donateur. Le paiement n'est PAS
+ * termine a ce stade : le statut final arrive par webhook (ou par getTransactionStatus).
+ */
+export const sendMobilePayment = async (
+  transactionId: number,
+  operator: MobileOperator,
+  phoneNumber: string,
+  country = 'tg'
+): Promise<void> => {
+  const token = await generateToken(transactionId);
+  const res = await fetch(`${getBaseUrl()}/v1/${resolveMode(operator)}`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${getSecretKey()}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ token, phone_number: { number: phoneNumber, country } })
+  });
+  if (!res.ok) {
+    throw new AppError(502, "La demande de paiement n'a pas pu etre envoyee a votre operateur");
+  }
+};
+
+export type FedapayStatus = 'pending' | 'approved' | 'declined' | 'canceled' | 'refunded' | 'transferred' | string;
+
+/**
+ * Lit le statut reel d'une transaction chez FedaPay. Sert de filet de securite quand le
+ * webhook est en retard ou absent : c'est FedaPay qui fait foi, jamais le navigateur.
+ */
+export const getTransactionStatus = async (transactionId: number): Promise<FedapayStatus> => {
+  const res = await fetch(`${getBaseUrl()}/v1/transactions/${transactionId}`, {
+    headers: { Authorization: `Bearer ${getSecretKey()}` }
+  });
+  if (!res.ok) {
+    throw new AppError(502, 'Impossible de verifier le statut du paiement');
+  }
+  // Selon l'endpoint, l'entite est enveloppee sous "v1/transaction" ou livree directement.
+  const body = (await res.json()) as { 'v1/transaction'?: FedapayTransaction } & Partial<FedapayTransaction>;
+  const status = body['v1/transaction']?.status ?? body.status;
+  if (!status) {
+    throw new AppError(502, 'Impossible de verifier le statut du paiement');
+  }
+  return status;
+};
