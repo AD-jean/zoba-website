@@ -206,6 +206,8 @@ export const registrationsApi = {
 };
 
 // ============ DONATIONS ============
+export type MobileOperator = 'moov_tg' | 'togocel';
+
 export const donationsApi = {
   record: (data: { donorName?: string; donorEmail?: string; donorPhone?: string; amount: number; currency?: string; paymentMethod: string; message?: string }) =>
     apiRequest<{ message: string; id: string }>('/donations', { method: 'POST', body: JSON.stringify(data) }),
@@ -215,6 +217,15 @@ export const donationsApi = {
       | { provider: 'stripe'; url: string }
       | { provider: 'fedapay'; url: string }
     >('/donations/checkout', { method: 'POST', body: JSON.stringify(data) }),
+
+  mobileMoney: (data: { amount: number; operator: MobileOperator; phone: string; donorName?: string; donorEmail?: string }) =>
+    apiRequest<{ id: string; status: 'pending'; message: string }>('/donations/mobile-money', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  getStatus: (id: string) =>
+    apiRequest<{ status: 'pending' | 'completed' | 'failed' }>(`/donations/${id}/status`),
 
   getAll: (filters?: { status?: string }) => {
     const params = filters?.status ? `?status=${filters.status}` : '';

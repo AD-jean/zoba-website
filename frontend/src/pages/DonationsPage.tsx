@@ -28,7 +28,7 @@ const METHODS: {
   {
     id: 'FedaPay',
     label: 'Mobile Money',
-    tagline: 'Moov, MTN, cartes — via FedaPay',
+    tagline: 'Moov Money, Mixx by Yas',
     icon: <Smartphone size={20} />,
     selectedClasses: 'border-emerald-600 bg-emerald-50 text-emerald-700',
     idleHoverClasses: 'hover:border-emerald-300',

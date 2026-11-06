@@ -73,3 +73,18 @@ export const applyFedapayEvent = async (event: FedapayEvent): Promise<void> => {
     );
   }
 };
+
+/**
+ * Applique un statut FedaPay lu directement via l'API (verification active par le
+ * frontend pendant l'attente du Mobile Money). Memes regles d'idempotence que le webhook :
+ * un don deja complete ne bouge plus, un echec ne s'applique qu'a un don encore en attente.
+ */
+export const applyFedapayStatus = async (donationId: string, status: string): Promise<void> => {
+  if (status === 'approved' || status === 'transferred') {
+    await Donation.findOneAndUpdate({ _id: donationId, status: { $ne: 'completed' } }, { status: 'completed' });
+    return;
+  }
+  if (status === 'declined' || status === 'canceled') {
+    await Donation.findOneAndUpdate({ _id: donationId, status: 'pending' }, { status: 'failed' });
+  }
+};

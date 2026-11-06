@@ -136,6 +136,16 @@ VITE_FEDAPAY_PUBLIC_KEY=pk_sandbox_votre_cle
 
 Flux commun aux deux : `POST /api/donations/checkout` crée un `Donation` en base avec `status: pending` (montant validé côté serveur), puis renvoie au frontend soit un `clientSecret` Stripe (monté dans `<PaymentElement>`), soit un `transactionId` FedaPay (donné au widget Checkout.js). Seul le webhook serveur (`POST /api/donations/webhook/stripe` ou `/fedapay`), signature vérifiée, fait passer le don à `completed` — jamais la confirmation du widget côté client.
 
+#### Mobile Money sans redirection (dons)
+
+Pour le Mobile Money, le donateur **reste sur la page** : il choisit son opérateur (Moov Money ou Mixx by Yas), saisit son numéro, et valide le paiement avec son code secret directement sur son téléphone (push USSD FedaPay).
+
+1. `POST /api/donations/mobile-money` `{ amount, operator: 'moov_tg' | 'togocel', phone, donorName?, donorEmail? }` crée le don (`pending`) et la transaction FedaPay, génère le token, puis déclenche `POST /v1/{mode}` chez FedaPay.
+2. Le frontend interroge `GET /api/donations/:id/status` toutes les 4 s (3 min max). Tant que le don est `pending`, le backend relit le statut **chez FedaPay** (`GET /v1/transactions/:id`) : c'est FedaPay qui fait foi, même si le webhook est en retard. Le webhook reste actif et idempotent.
+3. La page hébergée FedaPay reste proposée en lien de repli.
+
+> **Sandbox** : FedaPay n'accepte plus que le mode `momo_test` (forcé automatiquement quand `FEDAPAY_ENV` ≠ `live`). Numéros de succès : `64000001` ou `66000001` ; tout autre numéro simule un échec. En `live`, les vrais modes `moov_tg` / `togocel` sont utilisés : vérifier qu'ils sont activés sur le compte FedaPay.
+
 Tester les webhooks en local avec le CLI Stripe :
 
 ```bash

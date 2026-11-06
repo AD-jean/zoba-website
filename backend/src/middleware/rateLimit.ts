@@ -22,3 +22,14 @@ export const publicFormLimiter = rateLimit({
   legacyHeaders: false,
   message: { message: "Trop d'envois depuis cette adresse, réessayez plus tard" }
 });
+
+// Verification du statut d'un paiement Mobile Money : le frontend interroge toutes les
+// quelques secondes pendant que le donateur valide sur son telephone. Plus permissif que
+// publicFormLimiter, mais borne pour eviter qu'on s'en serve pour marteler l'API FedaPay.
+export const paymentStatusLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 150,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Trop de verifications, reessayez dans quelques minutes' }
+});
