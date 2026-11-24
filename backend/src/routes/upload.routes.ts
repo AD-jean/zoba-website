@@ -3,7 +3,7 @@ import multer from 'multer';
 import { protect, AuthRequest } from '../middleware/auth.middleware';
 import { asyncHandler } from '../middleware/asyncHandler';
 import { AppError } from '../utils/AppError';
-import { uploadImage } from '../services/cloudinary.service';
+import { uploadImage, createSignedUpload } from '../services/cloudinary.service';
 
 const router = Router();
 
@@ -38,6 +38,19 @@ router.post(
 
     const url = await uploadImage(req.file.buffer, folder);
     res.status(201).json({ url });
+  })
+);
+
+// Parametres signes pour un upload direct depuis le navigateur (videos de la galerie).
+router.get(
+  '/signature',
+  protect,
+  asyncHandler(async (req: AuthRequest, res: Response) => {
+    const folder = typeof req.query.folder === 'string' && ALLOWED_FOLDERS.includes(req.query.folder)
+      ? req.query.folder
+      : 'misc';
+    const resourceType = req.query.resourceType === 'video' ? 'video' : 'image';
+    res.json(createSignedUpload(folder, resourceType));
   })
 );
 

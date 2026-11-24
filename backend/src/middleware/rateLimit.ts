@@ -22,3 +22,13 @@ export const publicFormLimiter = rateLimit({
   legacyHeaders: false,
   message: { message: "Trop d'envois depuis cette adresse, réessayez plus tard" }
 });
+
+// Verification du statut d'un paiement au retour sur le site : le front interroge
+// toutes les quelques secondes pendant ~1 minute, d'ou une limite plus large.
+export const paymentStatusLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { message: 'Trop de verifications, reessayez dans quelques minutes' }
+});

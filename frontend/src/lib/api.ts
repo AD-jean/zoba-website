@@ -48,6 +48,56 @@ export const uploadsApi = {
   },
 };
 
+export const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
+
+/**
+ * Téléversement direct navigateur -> Cloudinary (vidéos) avec suivi de progression.
+ * Le serveur fournit seulement une signature : le fichier ne transite pas par l'API.
+ */
+export async function uploadVideoDirect(
+  file: File,
+  folder: 'gallery',
+  onProgress?: (percent: number) => void
+): Promise<{ url: string }> {
+  const sig = await apiRequest<{
+    cloudName: string;
+    apiKey: string;
+    timestamp: number;
+    signature: string;
+    folder: string;
+    eager?: string;
+    eagerAsync?: boolean;
+  }>(`/uploads/signature?folder=${folder}&resourceType=video`);
+
+  const form = new FormData();
+  form.append('file', file);
+  form.append('api_key', sig.apiKey);
+  form.append('timestamp', String(sig.timestamp));
+  form.append('signature', sig.signature);
+  form.append('folder', sig.folder);
+  if (sig.eager) form.append('eager', sig.eager);
+  if (sig.eagerAsync) form.append('eager_async', 'true');
+
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `https://api.cloudinary.com/v1_1/${sig.cloudName}/video/upload`);
+    xhr.upload.onprogress = e => {
+      if (e.lengthComputable) onProgress?.(Math.round((e.loaded / e.total) * 100));
+    };
+    xhr.onload = () => {
+      try {
+        const body = JSON.parse(xhr.responseText);
+        if (xhr.status >= 200 && xhr.status < 300 && body.secure_url) resolve({ url: body.secure_url });
+        else reject(new Error(body?.error?.message || 'Échec du téléversement de la vidéo'));
+      } catch {
+        reject(new Error('Échec du téléversement de la vidéo'));
+      }
+    };
+    xhr.onerror = () => reject(new Error('Connexion interrompue pendant le téléversement'));
+    xhr.send(form);
+  });
+}
+
 // ============ AUTH ============
 export interface AdminUser {
   id: string;
@@ -187,6 +237,11 @@ export const registrationsApi = {
       | { provider: 'fedapay'; transactionId: number; id: string }
     >('/registrations/checkout', { method: 'POST', body: JSON.stringify(data) }),
 
+  getPaymentStatus: (id: string) =>
+    apiRequest<{ paymentStatus: 'not_required' | 'pending' | 'paid' | 'failed'; ticketCode?: string }>(
+      `/registrations/${encodeURIComponent(id)}/payment-status`
+    ),
+
   getTicket: (ticketCode: string) => apiRequest<Ticket>(`/registrations/ticket/${ticketCode}`),
 
   checkIn: (ticketCode: string) =>
@@ -221,6 +276,11 @@ export const donationsApi = {
     return apiRequest<any[]>(`/donations${params}`);
   },
 
+  getStatus: (id: string) =>
+    apiRequest<{ status: 'pending' | 'completed' | 'failed'; amount: number; currency: string; provider?: 'stripe' | 'fedapay' }>(
+      `/donations/${encodeURIComponent(id)}/status`
+    ),
+
   getStats: () => apiRequest<{ totalAmount: number; count: number; avgAmount: number }>('/donations/stats'),
 
   updateStatus: (id: string, status: 'pending' | 'completed' | 'failed') =>
@@ -228,3 +288,37 @@ export const donationsApi = {
 
   delete: (id: string) => apiRequest<{ message: string }>(`/donations/${id}`, { method: 'DELETE' }),
 };
+
+// ============ SUIVI DE PAIEMENT ============
+/**
+ * Interroge un statut de paiement jusqu'a ce qu'il soit tranche (ou jusqu'au delai).
+ * Le serveur verifie lui-meme aupres de Stripe/FedaPay : on n'affiche jamais "valide"
+ * sur la seule foi de l'URL de retour.
+ */
+export async function pollUntilSettled<T>(
+  fetchStatus: () => Promise<T>,
+  isSettled: (value: T) => boolean,
+  { intervalMs = 2500, timeoutMs = 60000, signal }: { intervalMs?: number; timeoutMs?: number; signal?: AbortSignal } = {}
+): Promise<T | null> {
+  const deadline = Date.now() + timeoutMs;
+  let last: T | null = null;
+  while (!signal?.aborted) {
+    try {
+      last = await fetchStatus();
+      if (isSettled(last)) return last;
+    } catch {
+      // erreur reseau ponctuelle : on reessaie jusqu'au delai
+    }
+    if (Date.now() + intervalMs > deadline) break;
+    await new Promise(resolve => setTimeout(resolve, intervalMs));
+  }
+  return last;
+}
+
+/** Issue cote navigateur d'un paiement de billet, a confirmer ensuite par le serveur. */
+export interface TicketPaymentResult {
+  registrationId: string;
+  /** paid/processing : le serveur doit encore confirmer ; failed : refuse immediatement. */
+  kind: 'paid' | 'processing' | 'failed';
+  message?: string;
+}

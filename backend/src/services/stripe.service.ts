@@ -66,7 +66,7 @@ export const createCheckoutSession = async ({
   donorEmail,
   successUrl,
   cancelUrl
-}: CreateCheckoutSessionParams): Promise<string> => {
+}: CreateCheckoutSessionParams): Promise<{ id: string; url: string }> => {
   const stripe = getClient();
 
   let session: Stripe.Checkout.Session;
@@ -99,8 +99,35 @@ export const createCheckoutSession = async ({
     throw new AppError(502, 'Impossible de creer le paiement Stripe');
   }
 
-  return session.url;
+  return { id: session.id, url: session.url };
 };
+
+export interface CheckoutSessionState {
+  status: string | null;
+  paymentStatus: string;
+  paymentIntentId?: string;
+}
+
+export const retrieveCheckoutSession = async (sessionId: string): Promise<CheckoutSessionState> => {
+  const stripe = getClient();
+  const session = await stripe.checkout.sessions.retrieve(sessionId);
+  const pi = session.payment_intent;
+  return {
+    status: session.status,
+    paymentStatus: session.payment_status,
+    paymentIntentId: typeof pi === 'string' ? pi : pi?.id
+  };
+};
+
+export const retrievePaymentIntentStatus = async (paymentIntentId: string): Promise<Stripe.PaymentIntent.Status> => {
+  const stripe = getClient();
+  const intent = await stripe.paymentIntents.retrieve(paymentIntentId);
+  return intent.status;
+};
+
+/** Un client_secret Stripe a la forme "pi_xxx_secret_yyy" : l'id du PaymentIntent en est le prefixe. */
+export const paymentIntentIdFromClientSecret = (clientSecret: string): string =>
+  clientSecret.split('_secret_')[0];
 
 export const constructWebhookEvent = (rawBody: Buffer, signature: string): Stripe.Event => {
   const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;

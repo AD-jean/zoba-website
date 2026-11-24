@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Users, BookOpen, Heart, Star, ArrowRight, Calendar, MapPin,
-  ChevronRight, Quote, ShieldCheck, Gem, Flame, Sprout
+  ChevronRight, Quote, ShieldCheck, Gem, Flame, Sprout, Play
 } from 'lucide-react';
 import { activitiesApi, newsApi, galleryApi } from '../lib/api';
 import { formatDate } from '../lib/format';
@@ -12,6 +12,7 @@ import OrganicFloat from '../components/OrganicFloat';
 import TiltCard from '../components/TiltCard';
 import DepartmentIcon from '../components/DepartmentIcon';
 import GalleryLightbox from '../components/GalleryLightbox';
+import { imageUrl, imageSrcSet, preloadVideo } from '../lib/media';
 import type { Activity, News, GalleryItem } from '../types/database';
 
 // ─── Hero ────────────────────────────────────────────────────────────────────
@@ -398,13 +399,24 @@ function GalleryPreview({ items }: { items: GalleryItem[] }) {
               style={{ aspectRatio: i === 0 ? undefined : '4/3' }}
             >
               <img
-                src={`${item.image}?auto=compress&cs=tinysrgb&w=600`}
+                src={imageUrl(item.image, 640)}
+                srcSet={imageSrcSet(item.image)}
+                sizes="(min-width: 768px) 33vw, 50vw"
                 alt={item.caption || ''}
                 loading="lazy"
-                className="w-full h-full object-cover group-hover:scale-[1.03] transition-transform duration-500"
+                decoding="async"
+                onMouseEnter={item.mediaType === 'video' && item.videoUrl ? () => preloadVideo(item.videoUrl as string) : undefined}
+                className="w-full h-full object-cover bg-teal-700 group-hover:scale-[1.03] transition-transform duration-500"
                 style={i === 0 ? { height: '100%' } : {}}
               />
               <div className="absolute inset-0 bg-teal-900/0 group-hover:bg-teal-900/40 transition-colors duration-300" />
+              {item.mediaType === 'video' && (
+                <span className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <span className="w-12 h-12 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center">
+                    <Play size={20} className="text-white fill-white ml-0.5" />
+                  </span>
+                </span>
+              )}
               {item.caption && (
                 <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-teal-900/80 to-transparent p-4 translate-y-0 sm:translate-y-full sm:group-hover:translate-y-0 transition-transform duration-300">
                   <p className="text-white text-sm font-medium">{item.caption}</p>

@@ -1,8 +1,68 @@
 import { Link } from 'react-router-dom';
-import { MapPin, Phone, Mail, Facebook, Youtube, Instagram, Heart } from 'lucide-react';
-import { useState } from 'react';
+import { MapPin, Phone, Mail, Facebook, Youtube, Instagram, Heart, Cookie, X } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { subscribersApi } from '../lib/api';
 import { TikTokIcon, WhatsAppIcon } from './icons/BrandIcons';
+
+const COOKIE_NOTICE_KEY = 'zoba-cookie-notice';
+const COOKIE_NOTICE_TTL_MS = 365 * 24 * 60 * 60 * 1000;
+
+/**
+ * Information cookies. Le site ne dépose aucun cookie de mesure d'audience ni de
+ * publicité : seuls des éléments strictement nécessaires (paiement, admin) existent,
+ * d'où une simple information (pas de recueil de consentement).
+ */
+function CookieNotice() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    try {
+      const seenAt = Number(localStorage.getItem(COOKIE_NOTICE_KEY));
+      if (!seenAt || Date.now() - seenAt > COOKIE_NOTICE_TTL_MS) setVisible(true);
+    } catch {
+      // stockage indisponible (navigation privée stricte) : on n'affiche rien plutôt que de boucler
+    }
+  }, []);
+
+  const dismiss = () => {
+    try {
+      localStorage.setItem(COOKIE_NOTICE_KEY, String(Date.now()));
+    } catch {
+      // ignore
+    }
+    setVisible(false);
+  };
+
+  if (!visible) return null;
+
+  return (
+    <div
+      role="region"
+      aria-label="Information sur les cookies"
+      className="fixed bottom-4 left-4 right-4 sm:right-auto sm:max-w-sm z-40 bg-white text-gray-700 rounded-2xl shadow-2xl border border-gray-100 p-5 animate-fade-in"
+    >
+      <button onClick={dismiss} aria-label="Fermer" className="absolute top-3 right-3 text-gray-400 hover:text-gray-600">
+        <X size={16} />
+      </button>
+      <div className="flex items-start gap-3">
+        <Cookie size={22} className="text-teal-600 flex-shrink-0 mt-0.5" />
+        <div className="text-sm leading-relaxed">
+          <p className="font-semibold text-gray-900 mb-1">Votre vie privée</p>
+          <p>
+            Ce site n'utilise aucun cookie publicitaire ni de suivi. Seuls des éléments indispensables au paiement
+            sécurisé sont utilisés.{' '}
+            <Link to="/confidentialite#cookies" onClick={dismiss} className="text-teal-700 underline whitespace-nowrap">
+              En savoir plus
+            </Link>
+          </p>
+          <button onClick={dismiss} className="btn-primary mt-3 !py-2 !px-4 text-sm">
+            J'ai compris
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function Footer() {
   const [email, setEmail] = useState('');
@@ -157,6 +217,10 @@ export default function Footer() {
                 {status === 'error' && (
                   <p className="text-red-400 text-xs animate-fade-in">Une erreur est survenue. Réessayez.</p>
                 )}
+                <p className="text-[11px] text-teal-400 leading-snug">
+                  Désinscription possible à tout moment.{' '}
+                  <Link to="/confidentialite" className="underline hover:text-white">Confidentialité</Link>
+                </p>
               </form>
             )}
           </div>
@@ -164,8 +228,13 @@ export default function Footer() {
 
         <div className="mt-12 pt-8 border-t border-teal-800 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-teal-500">
           <p>© {new Date().getFullYear()} Zone Baptiste Agapé — ZOBA. Tous droits réservés.</p>
+          <nav aria-label="Informations légales" className="flex gap-4">
+            <Link to="/confidentialite" className="hover:text-white transition-colors">Politique de confidentialité</Link>
+            <Link to="/confidentialite#cookies" className="hover:text-white transition-colors">Cookies</Link>
+          </nav>
         </div>
       </div>
+      <CookieNotice />
     </footer>
   );
 }

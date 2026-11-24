@@ -112,7 +112,7 @@ ADMIN_PASSWORD=ChangeMe123!
 
 #### Paiements — Stripe et FedaPay (optionnel)
 
-La page de dons propose, en plus de l'enregistrement manuel (Moov/Mixx/PayPal, chacun avec son propre panneau), deux passerelles de paiement réelles **intégrées directement sur la page** (pas de redirection) : Stripe via **Stripe Elements** (formulaire de carte) et FedaPay via son widget **Checkout.js** (Mobile Money). Chacune est indépendante : le backend démarre sans elles, seule la route `/checkout` échoue pour le fournisseur non configuré.
+La page de dons propose, en plus de l'enregistrement manuel (Moov/Mixx/PayPal, chacun avec son propre panneau), deux passerelles de paiement réelles : Stripe (carte) et FedaPay (Mobile Money). Les **dons** redirigent vers la page de paiement sécurisée du fournisseur (Stripe Checkout / page FedaPay) ; les **billets d'activités** utilisent les formulaires intégrés (Stripe Elements et widget Checkout.js). Chacune est indépendante : le backend démarre sans elles, seule la route `/checkout` échoue pour le fournisseur non configuré.
 
 ```env
 # Stripe (carte bancaire, cle secrete cote backend uniquement)
@@ -146,6 +146,22 @@ stripe trigger payment_intent.succeeded
 Pour FedaPay, exposer le port local (ex. `ngrok http 5000`) et configurer l'URL de webhook `https://<ngrok>/api/donations/webhook/fedapay` dans le dashboard FedaPay (mode sandbox).
 
 > Consultez `docs/implementation.md` pour le contexte initial de l'intégration Stripe (le flux décrit y est désormais remplacé par Stripe Elements).
+
+#### Message de résultat après paiement
+
+Après un don, Stripe et FedaPay renvoient le donateur sur `/dons/retour/<id du don>`. La page interroge `GET /api/donations/:id/status`, qui vérifie lui-même le paiement auprès du fournisseur si le webhook n'est pas encore arrivé, puis affiche un message plein écran : **paiement validé**, **refusé**, **annulé** ou **en cours de traitement**. Pour les billets payants, même principe via `GET /api/registrations/:id/payment-status` (le billet et son e-mail ne sont émis qu'après confirmation serveur). Un reçu de don est envoyé par e-mail (Resend) si le donateur a indiqué son adresse.
+
+#### Tests automatisés (backend)
+
+```bash
+cd backend && npm test
+```
+
+Couvrent : signature des webhooks Stripe/FedaPay (valide, falsifiée, rejouée), passage des dons en `completed`/`failed`, idempotence (pas de double reçu), vérification au retour, route de statut, envoi des e-mails (QR code en pièce jointe inline `cid:` — les clients mail bloquent les images `data:` —, échappement HTML, erreurs Resend). Les appels réels à Stripe/FedaPay/Resend sont simulés : un test de bout en bout en mode sandbox reste à faire avec vos clés.
+
+#### Galerie : photos et vidéos
+
+Les médias sont servis par Cloudinary avec des transformations d'URL (`src/lib/media.ts`) : vignettes redimensionnées et au format AVIF/WebP au lieu des originaux, aperçu flouté instantané, `srcset` responsive. Les vidéos (onglet Galerie de l'admin → « Vidéo ») sont téléversées directement du navigateur vers Cloudinary (`GET /api/uploads/signature`), qui pré-génère une version MP4 H.264 1280 px ; la grille n'affiche que l'image d'affiche et la vidéo est préchargée au survol, pour un démarrage quasi immédiat.
 
 ### Frontend
 

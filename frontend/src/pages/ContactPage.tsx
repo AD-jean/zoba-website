@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { MapPin, Phone, Mail, CheckCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { contactsApi } from '../lib/api';
 
 export default function ContactPage() {
@@ -174,6 +175,10 @@ export default function ContactPage() {
                   >
                     {status === 'loading' ? 'Envoi en cours...' : 'Envoyer le message'}
                   </button>
+                  <p className="text-xs text-gray-400 text-center">
+                    Vos informations servent uniquement à vous répondre.{' '}
+                    <Link to="/confidentialite" className="underline hover:text-teal-700">Politique de confidentialité</Link>
+                  </p>
                 </form>
               )}
             </div>

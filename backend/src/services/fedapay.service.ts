@@ -112,6 +112,30 @@ export const generateCheckoutUrl = async (transactionId: number): Promise<string
   return body.url;
 };
 
+/** Statut actuel d'une transaction, lu directement chez FedaPay (cle secrete, cote serveur). */
+export const getTransactionStatus = async (transactionId: number): Promise<string> => {
+  const secretKey = getSecretKey();
+  const baseUrl = getBaseUrl();
+
+  const res = await fetch(`${baseUrl}/v1/transactions/${transactionId}`, {
+    headers: { Authorization: `Bearer ${secretKey}` }
+  });
+  if (!res.ok) {
+    throw new AppError(502, 'Impossible de verifier la transaction FedaPay');
+  }
+  // Meme enveloppe "v1/transaction" que la reponse de creation.
+  const body = (await res.json()) as { 'v1/transaction'?: FedapayTransaction };
+  const status = body['v1/transaction']?.status;
+  if (!status) {
+    throw new AppError(502, 'Impossible de verifier la transaction FedaPay');
+  }
+  return status;
+};
+
+export const isApprovedStatus = (status: string): boolean => status === 'approved' || status === 'transferred';
+export const isFailedStatus = (status: string): boolean =>
+  status === 'declined' || status === 'canceled' || status === 'refunded' || status === 'expired';
+
 interface FedapayEvent {
   id: number;
   type: string;

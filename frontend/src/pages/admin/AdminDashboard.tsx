@@ -14,6 +14,7 @@ import type {
   Contact, Subscriber, Registration, Donation, Department
 } from '../../types/database';
 import ImageUploadField from '../../components/admin/ImageUploadField';
+import { imageUrl, videoPosterUrl } from '../../lib/media';
 import ScannerTab from './ScannerTab';
 
 type Tab = 'activities' | 'news' | 'gallery' | 'members' | 'contacts' | 'subscribers' | 'registrations' | 'donations' | 'scanner';
@@ -254,16 +255,30 @@ function NewsTab() {
 
 function GalleryTab() {
   const [items, setItems] = useState<GalleryItem[]>([]);
-  const [form, setForm] = useState<GalleryInsert>({ image: '', caption: '', department: 'Tous' });
+  const emptyForm: GalleryInsert = { image: '', caption: '', department: 'Tous', mediaType: 'image', videoUrl: '' };
+  const [form, setForm] = useState<GalleryInsert>(emptyForm);
   const [adding, setAdding] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [saveError, setSaveError] = useState('');
 
   const load = () => galleryApi.getAll().then((data: GalleryItem[]) => setItems(data));
   useEffect(() => { load(); }, []);
 
+  const isVideo = form.mediaType === 'video';
+  const canSave = isVideo ? !!form.videoUrl : !!form.image;
+
   const save = async () => {
-    await galleryApi.create(form);
-    setAdding(false); setForm({ image: '', caption: '', department: 'Tous' }); load();
+    setSaveError('');
+    try {
+      // Vidéo : l'image affichée dans la grille est l'affiche extraite par Cloudinary.
+      const payload = isVideo
+        ? { ...form, image: videoPosterUrl(form.videoUrl ?? '', 1280) || form.videoUrl || '' }
+        : { ...form, mediaType: 'image' as const, videoUrl: undefined };
+      await galleryApi.create(payload);
+      setAdding(false); setForm(emptyForm); load();
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Enregistrement impossible');
+    }
   };
 
   const del = async (id: string) => { await galleryApi.delete(id); setDeleting(null); load(); };
@@ -277,7 +292,29 @@ function GalleryTab() {
 
       {adding && (
         <div className="bg-teal-50 rounded-xl p-6 border border-teal-200 space-y-4">
-          <ImageUploadField label="Image *" value={form.image} onChange={url => setForm(f => ({ ...f, image: url }))} folder="gallery" />
+          <div className="inline-flex rounded-lg bg-white border border-teal-200 p-1 text-sm">
+            {(['image', 'video'] as const).map(type => (
+              <button
+                key={type}
+                type="button"
+                onClick={() => setForm(f => ({ ...f, mediaType: type }))}
+                className={`px-4 py-1.5 rounded-md font-medium transition-colors ${form.mediaType === type ? 'bg-teal-600 text-white' : 'text-teal-700 hover:bg-teal-50'}`}
+              >
+                {type === 'image' ? 'Photo' : 'Vidéo'}
+              </button>
+            ))}
+          </div>
+          {isVideo ? (
+            <ImageUploadField
+              label="Vidéo *"
+              kind="video"
+              value={form.videoUrl ?? ''}
+              onChange={url => setForm(f => ({ ...f, videoUrl: url }))}
+              folder="gallery"
+            />
+          ) : (
+            <ImageUploadField label="Image *" value={form.image} onChange={url => setForm(f => ({ ...f, image: url }))} folder="gallery" />
+          )}
           <div className="grid sm:grid-cols-2 gap-4">
             <div>
               <label className="text-xs text-gray-600 font-medium mb-1 block">Légende</label>
@@ -291,16 +328,20 @@ function GalleryTab() {
             </div>
           </div>
           <div className="flex gap-2">
-            <button onClick={save} className="btn-primary text-sm py-2"><Save size={14} /> Enregistrer</button>
+            <button onClick={save} disabled={!canSave} className="btn-primary text-sm py-2 disabled:opacity-50"><Save size={14} /> Enregistrer</button>
             <button onClick={() => setAdding(false)} className="btn-outline text-sm py-2">Annuler</button>
           </div>
+          {saveError && <p className="text-red-500 text-sm">{saveError}</p>}
         </div>
       )}
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         {items.map(item => (
           <div key={item._id} className="relative group rounded-xl overflow-hidden aspect-square bg-gray-100">
-            <img src={item.image} alt={item.caption ?? ''} loading="lazy" className="w-full h-full object-cover" />
+            <img src={imageUrl(item.image, 400)} alt={item.caption ?? ''} loading="lazy" decoding="async" className="w-full h-full object-cover" />
+            {item.mediaType === 'video' && (
+              <span className="absolute top-2 left-2 bg-black/60 text-white text-[10px] font-semibold px-2 py-0.5 rounded-full">VIDÉO</span>
+            )}
             <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-center justify-center">
               {deleting === item._id ? (
                 <div className="flex gap-2">

@@ -7,7 +7,7 @@ import {
   useElements,
 } from '@stripe/react-stripe-js';
 import { CreditCard, Lock } from 'lucide-react';
-import { registrationsApi } from '../../lib/api';
+import { registrationsApi, type TicketPaymentResult } from '../../lib/api';
 
 const publishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string | undefined;
 const stripePromise = publishableKey ? loadStripe(publishableKey) : null;
@@ -27,14 +27,14 @@ interface TicketStripePanelProps {
   name: string;
   email: string;
   phone: string;
+  onResult: (result: TicketPaymentResult) => void;
 }
 
-function CheckoutForm() {
+function CheckoutForm({ registrationId, onResult }: { registrationId: string; onResult: (result: TicketPaymentResult) => void }) {
   const stripe = useStripe();
   const elements = useElements();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [succeeded, setSucceeded] = useState(false);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -42,29 +42,28 @@ function CheckoutForm() {
     setSubmitting(true);
     setError(null);
 
-    const { error: confirmError } = await stripe.confirmPayment({
+    const { error: confirmError, paymentIntent } = await stripe.confirmPayment({
       elements,
-      confirmParams: { return_url: `${window.location.origin}/activites?payment=success` },
+      // Moyens de paiement avec redirection (3-D Secure...) : retour sur /activites, qui
+      // reprend la verification grace a l'identifiant d'inscription.
+      confirmParams: { return_url: `${window.location.origin}/activites?inscription=${encodeURIComponent(registrationId)}` },
       redirect: 'if_required',
     });
+    setSubmitting(false);
 
     if (confirmError) {
-      setError(confirmError.message || 'Le paiement a échoué. Veuillez réessayer.');
-      setSubmitting(false);
+      const message = confirmError.message || 'Le paiement a échoué. Veuillez réessayer.';
+      // Erreur de saisie (champ incomplet) : simple message sous le formulaire.
+      // Carte refusée / authentification échouée : message plein écran.
+      setError(message);
+      if (confirmError.type !== 'validation_error') {
+        onResult({ registrationId, kind: 'failed', message });
+      }
       return;
     }
 
-    setSucceeded(true);
-    setSubmitting(false);
+    onResult({ registrationId, kind: paymentIntent?.status === 'succeeded' ? 'paid' : 'processing' });
   };
-
-  if (succeeded) {
-    return (
-      <p className="text-sm text-violet-800 bg-violet-50 border border-violet-200 rounded-xl p-4 animate-scale-in">
-        Paiement reçu ! Votre billet vous sera envoyé par e-mail dès confirmation du paiement.
-      </p>
-    );
-  }
 
   return (
     <form onSubmit={submit} className="space-y-4">
@@ -84,8 +83,9 @@ function CheckoutForm() {
   );
 }
 
-export default function TicketStripePanel({ activityId, name, email, phone }: TicketStripePanelProps) {
+export default function TicketStripePanel({ activityId, name, email, phone, onResult }: TicketStripePanelProps) {
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  const [registrationId, setRegistrationId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -93,7 +93,10 @@ export default function TicketStripePanel({ activityId, name, email, phone }: Ti
     registrationsApi
       .checkout({ activityId, name, email, phone, provider: 'stripe' })
       .then(data => {
-        if (data.provider === 'stripe') setClientSecret(data.clientSecret);
+        if (data.provider === 'stripe') {
+          setClientSecret(data.clientSecret);
+          setRegistrationId(data.id);
+        }
       })
       .catch(() => setError("Impossible d'initialiser le paiement par carte. Veuillez réessayer."));
     // Un seul checkout par montage du panneau : les infos du billet sont deja fixees a cette etape.
@@ -116,9 +119,9 @@ export default function TicketStripePanel({ activityId, name, email, phone }: Ti
       </div>
 
       {error && <p className="text-red-500 text-sm mb-3 animate-fade-in">{error}</p>}
-      {clientSecret && stripePromise ? (
+      {clientSecret && registrationId && stripePromise ? (
         <Elements stripe={stripePromise} options={{ clientSecret, appearance }}>
-          <CheckoutForm />
+          <CheckoutForm registrationId={registrationId} onResult={onResult} />
         </Elements>
       ) : (
         !error && <div className="h-40 rounded-xl bg-gray-100 animate-pulse" />
