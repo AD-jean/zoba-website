@@ -1,4 +1,4 @@
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -12,6 +12,7 @@ import GalleryPage from './pages/GalleryPage';
 import ContactPage from './pages/ContactPage';
 import DonationsPage from './pages/DonationsPage';
 import TicketPage from './pages/TicketPage';
+import PrivacyPage from './pages/PrivacyPage';
 
 const AdminPage = lazy(() => import('./pages/admin/AdminPage'));
 
@@ -23,12 +24,31 @@ function AdminFallback() {
   );
 }
 
+/** Remonte en haut à chaque changement de page, ou défile jusqu'à l'ancre (#cookies...). */
+function ScrollManager() {
+  const { pathname, hash } = useLocation();
+  useEffect(() => {
+    if (hash) {
+      // laisse le temps à la page cible de s'afficher avant de chercher l'ancre
+      const timer = setTimeout(() => {
+        document.getElementById(decodeURIComponent(hash.slice(1)))?.scrollIntoView({ behavior: 'instant' });
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+    // 'instant' : le CSS du site impose scroll-behavior: smooth, qui ferait défiler
+    // toute la page à rebours à chaque changement de route.
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+  }, [pathname, hash]);
+  return null;
+}
+
 function Layout() {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith('/admin');
 
   return (
     <>
+      <ScrollManager />
       {!isAdmin && <Navbar />}
       <main>
         <Routes>
@@ -40,7 +60,9 @@ function Layout() {
           <Route path="/galerie" element={<GalleryPage />} />
           <Route path="/contact" element={<ContactPage />} />
           <Route path="/dons" element={<DonationsPage />} />
+          <Route path="/dons/retour/:donationId" element={<DonationsPage />} />
           <Route path="/billet/:ticketCode" element={<TicketPage />} />
+          <Route path="/confidentialite" element={<PrivacyPage />} />
           <Route
             path="/admin/*"
             element={

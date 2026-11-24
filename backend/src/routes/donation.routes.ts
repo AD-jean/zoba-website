@@ -4,9 +4,10 @@ import Donation from '../models/Donation.model';
 import { protect, AuthRequest } from '../middleware/auth.middleware';
 import { asyncHandler } from '../middleware/asyncHandler';
 import { validate } from '../middleware/validate';
-import { publicFormLimiter } from '../middleware/rateLimit';
+import { publicFormLimiter, paymentStatusLimiter } from '../middleware/rateLimit';
 import * as stripeService from '../services/stripe.service';
 import * as fedapayService from '../services/fedapay.service';
+import * as donationService from '../services/donation.service';
 
 const router = Router();
 
@@ -129,18 +130,24 @@ router.post(
     });
 
     const frontendUrl = (process.env.FRONTEND_URL || 'http://localhost:5173').split(',')[0].trim();
+    // Page de retour propre a ce don : le front y interroge GET /donations/:id/status pour
+    // afficher "paiement accepte / refuse" selon le statut reel (jamais selon l'URL seule).
+    // Chemin sans query string : FedaPay ajoute lui-meme ?id=...&status=... a l'URL de rappel.
+    const returnUrl = `${frontendUrl}/dons/retour/${donation._id.toString()}`;
 
     try {
       if (provider === 'stripe') {
-        const url = await stripeService.createCheckoutSession({
+        const session = await stripeService.createCheckoutSession({
           amount,
           currency: finalCurrency,
           metadata: { donationId: donation._id.toString() },
           donorEmail,
-          successUrl: `${frontendUrl}/dons?payment=success`,
-          cancelUrl: `${frontendUrl}/dons?payment=cancel`
+          successUrl: returnUrl,
+          cancelUrl: `${returnUrl}?annule=1`
         });
-        return res.json({ provider: 'stripe', url });
+        donation.stripeCheckoutSessionId = session.id;
+        await donation.save();
+        return res.json({ provider: 'stripe', url: session.url });
       }
 
       const transactionId = await fedapayService.createTransaction({
@@ -151,8 +158,10 @@ router.post(
         donorName,
         donorEmail,
         donorPhone,
-        callbackUrl: `${frontendUrl}/dons?payment=success`
+        callbackUrl: returnUrl
       });
+      donation.fedapayTransactionId = String(transactionId);
+      await donation.save();
       const url = await fedapayService.generateCheckoutUrl(transactionId);
       return res.json({ provider: 'fedapay', url });
     } catch (err) {
@@ -160,6 +169,21 @@ router.post(
       await donation.save();
       throw err;
     }
+  })
+);
+
+// Statut public d'un don, consulte par la page de retour apres paiement. L'_id n'est connu
+// que du navigateur qui a lance le paiement ; on ne renvoie aucune donnee personnelle.
+router.get(
+  '/:id/status',
+  paymentStatusLimiter,
+  [param('id').isMongoId().withMessage('Identifiant invalide')],
+  validate,
+  asyncHandler(async (req, res) => {
+    const donation = await Donation.findById(req.params.id);
+    if (!donation) return res.status(404).json({ message: 'Don non trouve' });
+    const status = await donationService.reconcileDonation(donation);
+    res.json({ status, amount: donation.amount, currency: donation.currency, provider: donation.provider });
   })
 );
 

@@ -15,7 +15,13 @@ const galleryValidators = [
   body('description').optional({ values: 'falsy' }).isString().trim().isLength({ max: 1000 }),
   body('department').optional({ values: 'falsy' }).isIn(DEPARTMENTS).withMessage('Departement invalide'),
   body('category').optional({ values: 'falsy' }).isString().trim(),
-  body('event').optional({ values: 'falsy' }).isString().trim()
+  body('event').optional({ values: 'falsy' }).isString().trim(),
+  body('mediaType').optional().isIn(['image', 'video']).withMessage('Type de media invalide'),
+  // Les videos sont toujours servies par Cloudinary (transformations d'optimisation).
+  body('videoUrl')
+    .if(body('mediaType').equals('video'))
+    .isURL({ protocols: ['https'], require_protocol: true, host_whitelist: ['res.cloudinary.com'] })
+    .withMessage('URL de video invalide (Cloudinary attendu)')
 ];
 
 router.get(

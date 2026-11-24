@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Smartphone } from 'lucide-react';
-import { registrationsApi } from '../../lib/api';
+import { registrationsApi, type TicketPaymentResult } from '../../lib/api';
 import { loadFedaPayScript, type FedaPayGlobal } from '../../lib/fedapay';
 
 const publicKey = import.meta.env.VITE_FEDAPAY_PUBLIC_KEY as string | undefined;
@@ -10,17 +10,18 @@ interface TicketFedaPayPanelProps {
   name: string;
   email: string;
   phone: string;
+  onResult: (result: TicketPaymentResult) => void;
 }
 
-export default function TicketFedaPayPanel({ activityId, name, email, phone }: TicketFedaPayPanelProps) {
+export default function TicketFedaPayPanel({ activityId, name, email, phone, onResult }: TicketFedaPayPanelProps) {
   const [transactionId, setTransactionId] = useState<number | null>(null);
+  const [registrationId, setRegistrationId] = useState<string | null>(null);
   const [fedapay, setFedapay] = useState<FedaPayGlobal | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [succeeded, setSucceeded] = useState(false);
 
   useEffect(() => {
-    if (transactionId === null || !publicKey) return;
+    if (transactionId === null || registrationId === null || !publicKey) return;
     let cancelled = false;
 
     loadFedaPayScript()
@@ -31,10 +32,21 @@ export default function TicketFedaPayPanel({ activityId, name, email, phone }: T
           public_key: publicKey,
           transaction: { id: transactionId },
           customer: { email: email || undefined, firstname: name || undefined },
-          onComplete: reason => {
-            if (reason === FedaPay.CHECKOUT_COMPLETED) {
-              setSucceeded(true);
+          onComplete: (reason, transaction) => {
+            // Fenetre fermee sans payer : rien a annoncer, le bouton reste disponible.
+            if (reason !== FedaPay.CHECKOUT_COMPLETED) return;
+            const status = transaction?.status;
+            if (status === 'declined' || status === 'canceled') {
+              onResult({
+                registrationId,
+                kind: 'failed',
+                message: status === 'canceled'
+                  ? "Le paiement Mobile Money a été annulé. Aucun montant n'a été débité."
+                  : "Le paiement Mobile Money a été refusé (solde insuffisant, délai dépassé ou code erroné). Aucun montant n'a été débité.",
+              });
+              return;
             }
+            onResult({ registrationId, kind: status === 'approved' ? 'paid' : 'processing' });
           },
         });
       })
@@ -43,14 +55,18 @@ export default function TicketFedaPayPanel({ activityId, name, email, phone }: T
     return () => {
       cancelled = true;
     };
-  }, [transactionId, email, name]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [transactionId, registrationId, email, name]);
 
   const startCheckout = async () => {
     setSubmitting(true);
     setError(null);
     try {
       const data = await registrationsApi.checkout({ activityId, name, email, phone, provider: 'fedapay' });
-      if (data.provider === 'fedapay') setTransactionId(data.transactionId);
+      if (data.provider === 'fedapay') {
+        setRegistrationId(data.id);
+        setTransactionId(data.transactionId);
+      }
     } catch {
       setError("Impossible d'initialiser le paiement FedaPay. Veuillez réessayer.");
     }
@@ -61,14 +77,6 @@ export default function TicketFedaPayPanel({ activityId, name, email, phone }: T
     return (
       <p className="text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl p-4">
         Le paiement Mobile Money n'est pas encore configuré.
-      </p>
-    );
-  }
-
-  if (succeeded) {
-    return (
-      <p className="text-sm text-emerald-800 bg-emerald-50 border border-emerald-200 rounded-xl p-4 animate-scale-in">
-        Paiement reçu ! Votre billet vous sera envoyé par e-mail dès confirmation du paiement.
       </p>
     );
   }

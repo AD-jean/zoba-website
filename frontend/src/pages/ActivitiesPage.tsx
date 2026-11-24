@@ -1,7 +1,8 @@
-import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Calendar, MapPin, CheckCircle, X, ArrowLeft, Ticket as TicketIcon, Download } from 'lucide-react';
-import { activitiesApi, registrationsApi, API_URL } from '../lib/api';
+import { activitiesApi, registrationsApi, API_URL, pollUntilSettled, type TicketPaymentResult } from '../lib/api';
+import PaymentResultModal, { type PaymentOutcome } from '../components/PaymentResultModal';
 import { formatDate } from '../lib/format';
 import Reveal from '../components/Reveal';
 import TiltCard from '../components/TiltCard';
@@ -19,7 +20,15 @@ const deptColors: Record<string, string> = {
   Enfants: 'bg-green-100 text-green-700',
 };
 
-function RegistrationModal({ activity, onClose }: { activity: Activity; onClose: () => void }) {
+function RegistrationModal({
+  activity,
+  onClose,
+  onPaymentResult,
+}: {
+  activity: Activity;
+  onClose: () => void;
+  onPaymentResult: (result: TicketPaymentResult) => void;
+}) {
   const isPaid = activity.price > 0;
   const [step, setStep] = useState<'form' | 'payment' | 'success'>('form');
   const [form, setForm] = useState({ name: '', email: '', phone: '' });
@@ -112,11 +121,11 @@ function RegistrationModal({ activity, onClose }: { activity: Activity; onClose:
             >
               <ArrowLeft size={14} /> Modifier mes informations
             </button>
-            <TicketStripePanel activityId={activity._id} name={form.name} email={form.email} phone={form.phone} />
+            <TicketStripePanel activityId={activity._id} name={form.name} email={form.email} phone={form.phone} onResult={onPaymentResult} />
             <div className="flex items-center gap-3 text-xs text-gray-400">
               <div className="flex-1 h-px bg-gray-200" /> OU <div className="flex-1 h-px bg-gray-200" />
             </div>
-            <TicketFedaPayPanel activityId={activity._id} name={form.name} email={form.email} phone={form.phone} />
+            <TicketFedaPayPanel activityId={activity._id} name={form.name} email={form.email} phone={form.phone} onResult={onPaymentResult} />
           </div>
         )}
 
@@ -176,11 +185,83 @@ function RegistrationModal({ activity, onClose }: { activity: Activity; onClose:
   );
 }
 
+interface TicketPaymentState {
+  outcome: PaymentOutcome;
+  message?: string;
+  ticketCode?: string;
+}
+
+/**
+ * Suit le paiement d'un billet jusqu'à sa confirmation par le serveur (webhook ou
+ * vérification directe auprès de Stripe/FedaPay) et pilote le message plein écran.
+ */
+function useTicketPayment() {
+  const [state, setState] = useState<TicketPaymentState | null>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  const track = useCallback(async (registrationId: string) => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setState({ outcome: 'verifying' });
+    const res = await pollUntilSettled(
+      () => registrationsApi.getPaymentStatus(registrationId),
+      r => r.paymentStatus !== 'pending',
+      { signal: controller.signal }
+    );
+    if (controller.signal.aborted) return;
+    if (res?.paymentStatus === 'paid' || res?.paymentStatus === 'not_required') {
+      setState({ outcome: 'success', ticketCode: res.ticketCode });
+    } else if (res?.paymentStatus === 'failed') {
+      setState({ outcome: 'failed' });
+    } else {
+      setState({ outcome: 'pending' });
+    }
+  }, []);
+
+  const handleResult = useCallback(
+    (result: TicketPaymentResult) => {
+      if (result.kind === 'failed') {
+        setState({ outcome: 'failed', message: result.message });
+        return;
+      }
+      void track(result.registrationId);
+    },
+    [track]
+  );
+
+  useEffect(() => () => abortRef.current?.abort(), []);
+
+  return { state, setState, track, handleResult };
+}
+
 export default function ActivitiesPage() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [filter, setFilter] = useState<Department>('Tous');
   const [selected, setSelected] = useState<Activity | null>(null);
   const [loading, setLoading] = useState(true);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const payment = useTicketPayment();
+
+  // Retour après une redirection Stripe (3-D Secure...) : ?inscription=<id>&redirect_status=...
+  useEffect(() => {
+    const registrationId = searchParams.get('inscription');
+    if (!registrationId) return;
+    if (searchParams.get('redirect_status') === 'failed') {
+      payment.setState({ outcome: 'failed' });
+    } else {
+      void payment.track(registrationId);
+    }
+    setSearchParams({}, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const onPaymentResult = (result: TicketPaymentResult) => {
+    // Paiement accepté ou en cours : on ferme le formulaire pour laisser place au message.
+    // Refusé : on garde le formulaire ouvert derrière pour pouvoir réessayer.
+    if (result.kind !== 'failed') setSelected(null);
+    payment.handleResult(result);
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -190,7 +271,35 @@ export default function ActivitiesPage() {
 
   return (
     <>
-      {selected && <RegistrationModal activity={selected} onClose={() => setSelected(null)} />}
+      {selected && <RegistrationModal activity={selected} onClose={() => setSelected(null)} onPaymentResult={onPaymentResult} />}
+
+      {payment.state && (
+        <PaymentResultModal
+          outcome={payment.state.outcome}
+          title={payment.state.outcome === 'success' ? 'Paiement validé, billet confirmé !' : undefined}
+          message={
+            payment.state.outcome === 'success'
+              ? 'Votre billet vient de vous être envoyé par e-mail. Vous pouvez aussi le consulter ou le télécharger dès maintenant.'
+              : payment.state.message
+          }
+          actions={
+            payment.state.outcome === 'success' && payment.state.ticketCode ? (
+              <>
+                <Link to={`/billet/${payment.state.ticketCode}`} className="btn-outline w-full justify-center">
+                  <TicketIcon size={16} /> Voir mon billet
+                </Link>
+                <a
+                  href={`${API_URL}/registrations/ticket/${payment.state.ticketCode}/download`}
+                  className="btn-outline w-full justify-center"
+                >
+                  <Download size={16} /> Télécharger (PDF)
+                </a>
+              </>
+            ) : undefined
+          }
+          onClose={() => payment.setState(null)}
+        />
+      )}
 
       <section className="relative pt-32 pb-20 bg-gradient-animated overflow-hidden">
         <div className="absolute inset-0 opacity-10">

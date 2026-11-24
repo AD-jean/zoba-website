@@ -5,13 +5,14 @@ import Activity, { IActivity } from '../models/Activity.model';
 import { protect, AuthRequest } from '../middleware/auth.middleware';
 import { asyncHandler } from '../middleware/asyncHandler';
 import { validate } from '../middleware/validate';
-import { publicFormLimiter } from '../middleware/rateLimit';
-import { generateTicketCode, generateQrDataUrl, ticketUrl } from '../services/ticket.service';
+import { publicFormLimiter, paymentStatusLimiter } from '../middleware/rateLimit';
+import { generateTicketCode, generateQrBuffer, ticketUrl } from '../services/ticket.service';
 import { sendTicketEmail } from '../services/email.service';
 import { generateTicketPdf } from '../services/pdf.service';
 import * as stripeService from '../services/stripe.service';
 import * as fedapayService from '../services/fedapay.service';
 import { AppError } from '../utils/AppError';
+import * as registrationService from '../services/registration.service';
 
 const DUPLICATE_MESSAGE = 'Vous êtes déjà inscrit(e) à cette activité avec cette adresse e-mail';
 const isDuplicateKeyError = (err: unknown): boolean =>
@@ -98,7 +99,7 @@ router.post(
     }
 
     try {
-      const qrDataUrl = await generateQrDataUrl(ticketCode);
+      const qrPng = await generateQrBuffer(ticketCode);
       await sendTicketEmail({
         to: registration.email,
         name: registration.name,
@@ -106,7 +107,7 @@ router.post(
         activityDate: activity.date?.toLocaleDateString('fr-FR'),
         activityLocation: activity.location,
         ticketUrl: ticketUrl(ticketCode),
-        qrDataUrl
+        qrPng
       });
     } catch (err) {
       console.error('Envoi email billet echoue pour', registration._id.toString(), err);
@@ -160,6 +161,8 @@ router.post(
           metadata: { registrationId: registration._id.toString() },
           donorEmail: email
         });
+        registration.stripePaymentIntentId = stripeService.paymentIntentIdFromClientSecret(clientSecret);
+        await registration.save();
         return res.json({ provider: 'stripe', clientSecret, id: registration._id });
       }
 
@@ -172,12 +175,32 @@ router.post(
         donorEmail: email,
         donorPhone: phone
       });
+      registration.fedapayTransactionId = String(transactionId);
+      await registration.save();
       return res.json({ provider: 'fedapay', transactionId, id: registration._id });
     } catch (err) {
       registration.paymentStatus = 'failed';
       await registration.save();
       throw err;
     }
+  })
+);
+
+// Statut de paiement d'une inscription, interroge par le front apres le paiement pour afficher
+// le message de reussite/echec. Le ticketCode n'est renvoye qu'une fois le paiement confirme.
+router.get(
+  '/:id/payment-status',
+  paymentStatusLimiter,
+  [param('id').isMongoId().withMessage('Identifiant invalide')],
+  validate,
+  asyncHandler(async (req, res) => {
+    const registration = await Registration.findById(req.params.id);
+    if (!registration) return res.status(404).json({ message: 'Inscription non trouvee' });
+    const paymentStatus = await registrationService.reconcileRegistration(registration);
+    res.json({
+      paymentStatus,
+      ticketCode: paymentStatus === 'paid' || paymentStatus === 'not_required' ? registration.ticketCode : undefined
+    });
   })
 );
 

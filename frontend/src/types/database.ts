@@ -49,7 +49,10 @@ export type NewsInsert = Omit<News, '_id' | 'createdAt' | 'author' | 'category' 
 
 export interface GalleryItem {
   _id: string;
+  /** Image affichée ; pour une vidéo, son image d'affiche. */
   image: string;
+  mediaType?: 'image' | 'video';
+  videoUrl?: string;
   caption?: string;
   department: Department | null;
   createdAt: string;

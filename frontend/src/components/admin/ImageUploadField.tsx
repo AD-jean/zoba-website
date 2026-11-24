@@ -1,25 +1,37 @@
 import { useRef, useState } from 'react';
-import { UploadCloud, Loader2 } from 'lucide-react';
-import { uploadsApi } from '../../lib/api';
+import { UploadCloud, Loader2, Film } from 'lucide-react';
+import { uploadsApi, uploadVideoDirect, MAX_VIDEO_BYTES } from '../../lib/api';
+import { imageUrl, videoPosterUrl } from '../../lib/media';
 
 interface ImageUploadFieldProps {
   label: string;
   value: string;
   onChange: (url: string) => void;
   folder: 'members' | 'activities' | 'news' | 'gallery';
+  /** 'video' : téléversement direct vers Cloudinary (gros fichiers), galerie uniquement. */
+  kind?: 'image' | 'video';
 }
 
-export default function ImageUploadField({ label, value, onChange, folder }: ImageUploadFieldProps) {
+export default function ImageUploadField({ label, value, onChange, folder, kind = 'image' }: ImageUploadFieldProps) {
+  const isVideo = kind === 'video';
   const [uploading, setUploading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [error, setError] = useState('');
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFile = async (file: File) => {
     setError('');
+    if (isVideo && file.size > MAX_VIDEO_BYTES) {
+      setError('Vidéo trop lourde (100 Mo maximum). Raccourcissez-la ou exportez-la en 1080p.');
+      return;
+    }
     setUploading(true);
+    setProgress(0);
     try {
-      const { url } = await uploadsApi.upload(file, folder);
+      const { url } = isVideo
+        ? await uploadVideoDirect(file, 'gallery', setProgress)
+        : await uploadsApi.upload(file, folder);
       onChange(url);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur de televersement');
@@ -33,14 +45,21 @@ export default function ImageUploadField({ label, value, onChange, folder }: Ima
       <label className="text-xs text-gray-600 font-medium mb-1 block">{label}</label>
       <div className="flex gap-3 items-start">
         {value && (
-          <img src={value} alt="" className="w-16 h-16 rounded-lg object-cover flex-shrink-0 border border-gray-200" />
+          <div className="relative flex-shrink-0">
+            <img
+              src={isVideo ? videoPosterUrl(value, 200) || undefined : imageUrl(value, 200)}
+              alt=""
+              className="w-16 h-16 rounded-lg object-cover border border-gray-200 bg-gray-100"
+            />
+            {isVideo && <Film size={14} className="absolute bottom-1 right-1 text-white drop-shadow" />}
+          </div>
         )}
         <div className="flex-1 space-y-2">
           <input
             className="input-field"
             value={value}
             onChange={e => onChange(e.target.value)}
-            placeholder="https://... ou glissez une image ci-dessous"
+            placeholder={isVideo ? 'https://res.cloudinary.com/... ou glissez une vidéo ci-dessous' : 'https://... ou glissez une image ci-dessous'}
           />
           <div
             onDragOver={e => { e.preventDefault(); setDragOver(true); }}
@@ -57,18 +76,18 @@ export default function ImageUploadField({ label, value, onChange, folder }: Ima
           >
             {uploading ? (
               <>
-                <Loader2 size={16} className="animate-spin" /> Televersement...
+                <Loader2 size={16} className="animate-spin" /> Televersement...{isVideo && ` ${progress} %`}
               </>
             ) : (
               <>
-                <UploadCloud size={16} /> Glissez une image ou cliquez pour parcourir
+                <UploadCloud size={16} /> {isVideo ? 'Glissez une vidéo (MP4, MOV, WebM — 100 Mo max) ou cliquez' : 'Glissez une image ou cliquez pour parcourir'}
               </>
             )}
           </div>
           <input
             ref={inputRef}
             type="file"
-            accept="image/jpeg,image/png,image/webp,image/gif"
+            accept={isVideo ? 'video/mp4,video/quicktime,video/webm' : 'image/jpeg,image/png,image/webp,image/gif'}
             className="hidden"
             onChange={e => {
               const file = e.target.files?.[0];

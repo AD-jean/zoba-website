@@ -12,6 +12,7 @@ export interface IDonation extends Document {
   message?: string;
   provider?: 'stripe' | 'fedapay';
   stripePaymentIntentId?: string;
+  stripeCheckoutSessionId?: string;
   stripeEventId?: string;
   fedapayTransactionId?: string;
   fedapayEventId?: string;
@@ -34,6 +35,9 @@ const DonationSchema: Schema = new Schema(
     message: { type: String, trim: true },
     provider: { type: String, enum: ['stripe', 'fedapay'] },
     stripePaymentIntentId: { type: String, trim: true },
+    // Session Stripe Checkout creee au depart : permet de verifier le paiement au retour
+    // du donateur meme si le webhook tarde (cf. reconcileDonation).
+    stripeCheckoutSessionId: { type: String, trim: true },
     stripeEventId: { type: String, trim: true },
     fedapayTransactionId: { type: String, trim: true },
     fedapayEventId: { type: String, trim: true }

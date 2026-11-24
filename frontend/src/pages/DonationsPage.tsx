@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { Heart, CheckCircle, Shield, Smartphone, CreditCard, XCircle } from 'lucide-react';
-import { donationsApi } from '../lib/api';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Heart, Shield, Smartphone, CreditCard } from 'lucide-react';
+import { donationsApi, pollUntilSettled } from '../lib/api';
+import PaymentResultModal, { type PaymentOutcome } from '../components/PaymentResultModal';
 import StripePanel from './donations/StripePanel';
 import FedaPayPanel from './donations/FedaPayPanel';
 
@@ -113,22 +114,82 @@ function ManualMethodPanel({ method, amount }: { method: 'PayPal'; amount: numbe
   );
 }
 
-export default function DonationsPage() {
+/**
+ * Retour depuis Stripe/FedaPay sur /dons/retour/:donationId. Le statut affiché vient
+ * du serveur (qui vérifie auprès du fournisseur), jamais des paramètres de l'URL :
+ * ceux-ci servent seulement à afficher plus vite une annulation.
+ */
+function useDonationReturn() {
+  const { donationId } = useParams<{ donationId?: string }>();
   const [searchParams] = useSearchParams();
+  const [outcome, setOutcome] = useState<PaymentOutcome | null>(null);
+  const [paidAmount, setPaidAmount] = useState<number | null>(null);
+
+  useEffect(() => {
+    // Ancien format d'URL (?payment=cancel) encore possible pour des sessions ouvertes avant la mise à jour.
+    if (!donationId) {
+      if (searchParams.get('payment') === 'cancel') setOutcome('cancelled');
+      return;
+    }
+    // Stripe : cancel_url = .../retour/:id?annule=1 ; FedaPay ajoute ?status=canceled|declined.
+    const providerHint = searchParams.get('status');
+    if (searchParams.get('annule') === '1' || providerHint === 'canceled') {
+      setOutcome('cancelled');
+      return;
+    }
+
+    const controller = new AbortController();
+    setOutcome('verifying');
+    pollUntilSettled(
+      () => donationsApi.getStatus(donationId),
+      res => res.status !== 'pending',
+      { signal: controller.signal, timeoutMs: providerHint === 'declined' ? 10000 : 60000 }
+    ).then(res => {
+      if (controller.signal.aborted) return;
+      if (res) setPaidAmount(res.amount);
+      if (res?.status === 'completed') setOutcome('success');
+      else if (res?.status === 'failed') setOutcome('failed');
+      else setOutcome(providerHint === 'declined' ? 'failed' : 'pending');
+    });
+    return () => controller.abort();
+  }, [donationId, searchParams]);
+
+  return { outcome, setOutcome, paidAmount };
+}
+
+export default function DonationsPage() {
+  const navigate = useNavigate();
   const [amount, setAmount] = useState<number | ''>('');
   const [customAmount, setCustomAmount] = useState('');
   const [method, setMethod] = useState<Method | null>(null);
-  const [returnStatus, setReturnStatus] = useState<'success' | 'cancel' | null>(null);
+  const { outcome, setOutcome, paidAmount } = useDonationReturn();
 
-  useEffect(() => {
-    const payment = searchParams.get('payment');
-    if (payment === 'success' || payment === 'cancel') setReturnStatus(payment);
-  }, [searchParams]);
+  const closeResult = () => {
+    setOutcome(null);
+    navigate('/dons', { replace: true });
+  };
 
   const finalAmount = amount !== '' ? amount : Number(customAmount);
 
   return (
     <>
+      {outcome && (
+        <PaymentResultModal
+          outcome={outcome}
+          title={outcome === 'success' ? 'Merci pour votre don !' : undefined}
+          message={
+            outcome === 'success' ? (
+              <>
+                Votre don{paidAmount ? <> de <strong>{paidAmount.toLocaleString('fr-FR')} XOF</strong></> : null} a bien été reçu et validé.
+                Si vous avez indiqué votre e-mail, un reçu vous a été envoyé. Que Dieu vous bénisse !
+              </>
+            ) : undefined
+          }
+          onClose={closeResult}
+          onRetry={() => document.getElementById('don-formulaire')?.scrollIntoView({ behavior: 'smooth' })}
+        />
+      )}
+
       <section className="relative pt-32 pb-20 bg-gradient-animated overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-10 right-10 w-72 h-72 bg-white rounded-full blur-3xl" />
@@ -144,22 +205,7 @@ export default function DonationsPage() {
 
       <section className="py-16 bg-gray-50">
         <div className="max-w-2xl mx-auto px-4">
-          {returnStatus === 'success' && (
-            <div className="mb-6 flex items-start gap-3 bg-teal-50 border border-teal-200 rounded-xl p-4">
-              <CheckCircle size={20} className="text-teal-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-teal-800">
-                Paiement reçu, en cours de confirmation. Un reçu ne sera émis qu'une fois le paiement validé par notre système.
-              </p>
-            </div>
-          )}
-          {returnStatus === 'cancel' && (
-            <div className="mb-6 flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-xl p-4">
-              <XCircle size={20} className="text-amber-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-amber-800">Paiement annulé. Vous pouvez réessayer ci-dessous.</p>
-            </div>
-          )}
-
-          <div className="bg-white rounded-2xl shadow-sm p-5 sm:p-8 space-y-8">
+          <div id="don-formulaire" className="bg-white rounded-2xl shadow-sm p-5 sm:p-8 space-y-8 scroll-mt-28">
             {/* Amount */}
             <div>
               <h3 className="font-bold text-teal-800 mb-4 flex items-center gap-2">
@@ -237,6 +283,9 @@ export default function DonationsPage() {
 
             <p className="text-xs text-gray-400 text-center">
               Votre don contribue directement aux activités de la Zone Baptiste Agapé. Que Dieu vous bénisse.
+              <br />
+              Vos données sont traitées selon notre{' '}
+              <Link to="/confidentialite#paiements" className="underline hover:text-teal-700">politique de confidentialité</Link>.
             </p>
           </div>
         </div>
