@@ -17,6 +17,12 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
     headers,
   });
 
+  // Session admin expiree ou revoquee : on oublie le jeton et on revient a la connexion.
+  if (response.status === 401 && token && endpoint !== '/auth/login' && window.location.pathname.startsWith('/admin')) {
+    localStorage.removeItem('adminToken');
+    window.location.reload();
+  }
+
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: 'Erreur serveur' }));
     throw new Error(error.message || 'Erreur serveur');

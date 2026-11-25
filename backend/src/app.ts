@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import mongoose from 'mongoose';
-import { loginLimiter } from './middleware/rateLimit';
+import { loginLimiter, loginAccountLimiter } from './middleware/rateLimit';
 import authRoutes from './routes/auth.routes';
 import memberRoutes from './routes/member.routes';
 import activityRoutes from './routes/activity.routes';
@@ -51,7 +51,7 @@ app.use('/api/donations/webhook', express.raw({ type: 'application/json' }), don
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use('/api/auth/login', loginLimiter);
+app.use('/api/auth/login', loginLimiter, loginAccountLimiter);
 app.use('/api/auth', authRoutes);
 app.use('/api/members', memberRoutes);
 app.use('/api/activities', activityRoutes);
