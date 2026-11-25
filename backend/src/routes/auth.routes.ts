@@ -5,6 +5,14 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { asyncHandler } from '../middleware/asyncHandler';
 import { validate } from '../middleware/validate';
+import { JWT_ALGORITHMS } from '../middleware/auth.middleware';
+
+// Duree de session admin (heures). Courte par defaut : un jeton vole expire vite.
+const SESSION_HOURS = Math.min(Math.max(Number(process.env.ADMIN_SESSION_HOURS) || 12, 1), 168);
+
+// Hash factice : la comparaison bcrypt a toujours lieu, meme pour un e-mail inconnu,
+// pour que le temps de reponse ne revele pas quels comptes existent.
+const DUMMY_HASH = bcrypt.hashSync('zoba-compte-inexistant', 10);
 
 const router = Router();
 
@@ -19,12 +27,8 @@ router.post(
     const { email, password } = req.body;
 
     const admin = await Admin.findOne({ email: email.toLowerCase() }).select('+password');
-    if (!admin) {
-      return res.status(401).json({ message: 'Identifiants invalides' });
-    }
-
-    const isMatch = await bcrypt.compare(password, admin.password);
-    if (!isMatch) {
+    const isMatch = await bcrypt.compare(password, admin?.password ?? DUMMY_HASH);
+    if (!admin || !isMatch) {
       return res.status(401).json({ message: 'Identifiants invalides' });
     }
 
@@ -33,7 +37,7 @@ router.post(
       return res.status(500).json({ message: 'Configuration serveur invalide' });
     }
 
-    const token = jwt.sign({ id: admin._id }, secret, { expiresIn: '7d' });
+    const token = jwt.sign({ id: admin._id }, secret, { expiresIn: `${SESSION_HOURS}h`, algorithm: 'HS256' });
 
     res.json({
       token,
@@ -61,7 +65,7 @@ router.get('/verify', async (req, res) => {
   const token = authHeader.split(' ')[1];
 
   try {
-    const decoded = jwt.verify(token, secret) as { id: string };
+    const decoded = jwt.verify(token, secret, { algorithms: JWT_ALGORITHMS }) as { id: string };
     const admin = await Admin.findById(decoded.id);
 
     if (!admin) {

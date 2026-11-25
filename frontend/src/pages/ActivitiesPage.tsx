@@ -9,6 +9,7 @@ import TiltCard from '../components/TiltCard';
 import TicketStripePanel from './activities/TicketStripePanel';
 import TicketFedaPayPanel from './activities/TicketFedaPayPanel';
 import type { Activity, Department } from '../types/database';
+import EmptyState from '../components/EmptyState';
 
 const DEPARTMENTS: Department[] = ['Tous', 'Hommes', 'Femmes', 'Jeunesse', 'Enfants'];
 
@@ -340,10 +341,14 @@ export default function ActivitiesPage() {
               ))}
             </div>
           ) : activities.length === 0 ? (
-            <div className="text-center py-24 text-gray-400">
-              <Calendar size={40} className="mx-auto mb-4 opacity-40" />
-              <p>Aucune activité trouvée pour ce filtre.</p>
-            </div>
+            <EmptyState
+              illustration="calendar"
+              title={filter === 'Tous' ? 'Aucune activité programmée' : 'Aucune activité pour ce département'}
+              description={filter === 'Tous'
+                ? 'Les prochaines activités seront annoncées ici. Revenez bientôt !'
+                : 'Essayez un autre département ou affichez toutes les activités.'}
+              action={filter !== 'Tous' && <button onClick={() => setFilter('Tous')} className="btn-outline text-sm">Voir toutes les activités</button>}
+            />
           ) : (
             <Reveal className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
               {activities.map(activity => (

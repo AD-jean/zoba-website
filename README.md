@@ -234,9 +234,9 @@ Le plan gratuit Render met le service en veille après 15 min sans trafic (réve
 
 ## Administration
 
-- URL : `/admin`
+- URL : adresse secrète, connue des seuls administrateurs. `npm run admin-path` (dans `frontend/`) en génère une et affiche l'empreinte à mettre dans la variable Vercel `VITE_ADMIN_PATH_HASH`. Le code publié ne contient que cette empreinte ; `/admin` et toute autre adresse affichent « Page introuvable ». Sans la variable (développement local), l'admin reste sur `/admin`.
 - Identifiants d'administration : définis dans `backend/.env` (`ADMIN_EMAIL`/`ADMIN_PASSWORD`), créés automatiquement au démarrage du backend si ces variables sont renseignées.
-- Authentification par JWT (7 jours d'expiration), envoyé en `Authorization: Bearer <token>` sur les routes protégées.
+- Authentification par JWT (12 h d'expiration, `ADMIN_SESSION_HOURS`), envoyé en `Authorization: Bearer <token>` sur les routes protégées.
 
 > Important : ne publiez pas les identifiants d'administration ni les secrets de configuration.
 

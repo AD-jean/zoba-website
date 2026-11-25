@@ -1,4 +1,5 @@
 import type { Ticket } from '../types/database';
+import { isAdminArea } from './adminPath';
 
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -16,6 +17,12 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
     ...options,
     headers,
   });
+
+  // Session admin expiree ou revoquee : on oublie le jeton et on revient a la connexion.
+  if (response.status === 401 && token && endpoint !== '/auth/login' && isAdminArea()) {
+    localStorage.removeItem('adminToken');
+    window.location.reload();
+  }
 
   if (!response.ok) {
     const error = await response.json().catch(() => ({ message: 'Erreur serveur' }));
@@ -322,3 +329,45 @@ export interface TicketPaymentResult {
   kind: 'paid' | 'processing' | 'failed';
   message?: string;
 }
+
+// ============ STATISTIQUES (admin) ============
+export type StatsPeriod = '7d' | '30d' | '12m';
+export interface TopEntry { key: string; views: number; visitors: number }
+export interface TrafficPoint { key: string; views: number; visitors: number }
+export interface AudienceStats {
+  period: StatsPeriod;
+  totals: { views: number; visitors: number };
+  series: TrafficPoint[];
+  pages: TopEntry[];
+  referrers: TopEntry[];
+  direct: number;
+  devices: TopEntry[];
+  countries: TopEntry[];
+}
+export interface DashboardOverview {
+  kpis: {
+    donationsMonth: { amount: number; count: number };
+    donationsPrevMonth: { amount: number; count: number };
+    registrations: { total: number; month: number };
+    subscribers: { active: number; month: number };
+    messages: { unread: number; total: number };
+    visitors: { views: number; visitors: number };
+  };
+  donationSplit: { provider: 'stripe' | 'fedapay' | 'other'; amount: number; count: number }[];
+  latestRegistrations: {
+    _id: string; name: string; createdAt: string;
+    status: 'pending' | 'confirmed' | 'cancelled';
+    paymentStatus: 'not_required' | 'pending' | 'paid' | 'failed';
+    activityId?: { _id: string; title: string } | string | null;
+  }[];
+  latestDonations: {
+    _id: string; donorName?: string; amount: number; currency: string; createdAt: string;
+    provider?: 'stripe' | 'fedapay'; paymentMethod: string; status: 'pending' | 'completed' | 'failed';
+  }[];
+  traffic: { series: TrafficPoint[]; totals: { views: number; visitors: number } };
+}
+
+export const analyticsApi = {
+  overview: () => apiRequest<DashboardOverview>('/analytics/overview'),
+  stats: (period: StatsPeriod) => apiRequest<AudienceStats>(`/analytics/stats?period=${period}`),
+};

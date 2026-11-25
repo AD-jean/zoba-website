@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
-import { BookOpen, X } from 'lucide-react';
+import { ArrowRight, BookOpen, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { newsApi } from '../lib/api';
 import { formatDate } from '../lib/format';
 import Reveal from '../components/Reveal';
 import type { News } from '../types/database';
+import EmptyState from '../components/EmptyState';
 
 function ArticleModal({ article, onClose }: { article: News; onClose: () => void }) {
   const [closing, setClosing] = useState(false);
@@ -88,10 +90,12 @@ export default function NewsPage() {
               ))}
             </div>
           ) : news.length === 0 ? (
-            <div className="text-center py-24 text-gray-400">
-              <BookOpen size={40} className="mx-auto mb-4 opacity-40" />
-              <p>Aucune actualité publiée pour le moment.</p>
-            </div>
+            <EmptyState
+              illustration="news"
+              title="Aucune actualité pour le moment"
+              description="Les nouvelles de la zone seront publiées ici. En attendant, découvrez nos activités."
+              action={<Link to="/activites" className="btn-outline text-sm">Voir les activités</Link>}
+            />
           ) : (
             <>
               {/* Featured */}
@@ -117,7 +121,7 @@ export default function NewsPage() {
                       <p className="text-gray-500 leading-relaxed mb-6">{featured.excerpt}</p>
                     )}
                     <span className="text-teal-600 text-sm font-semibold group-hover:underline inline-flex items-center gap-1">
-                      Lire la suite <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">→</span>
+                      Lire la suite <ArrowRight size={15} className="transition-transform duration-200 group-hover:translate-x-1" />
                     </span>
                   </div>
                 </Reveal>

@@ -8,6 +8,15 @@ export default function AdminPage() {
   const [admin, setAdmin] = useState<AdminUser | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Jamais indexee par les moteurs de recherche (doublon de l'en-tete X-Robots-Tag de vercel.json).
+  useEffect(() => {
+    const meta = document.createElement('meta');
+    meta.name = 'robots';
+    meta.content = 'noindex, nofollow';
+    document.head.appendChild(meta);
+    return () => meta.remove();
+  }, []);
+
   useEffect(() => {
     if (!localStorage.getItem('adminToken')) {
       setLoading(false);

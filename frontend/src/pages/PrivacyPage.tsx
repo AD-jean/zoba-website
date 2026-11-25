@@ -170,6 +170,15 @@ export default function PrivacyPage() {
                 Un cookie est un petit fichier déposé sur votre appareil. <strong>Notre site n'utilise aucun cookie
                 publicitaire ni de mesure d'audience</strong>, et aucun traceur de réseau social.
               </p>
+              <p>
+                <strong>Mesure d'audience sans cookie.</strong> Pour savoir quelles pages sont consultées, notre serveur
+                compte les pages vues de façon anonyme : page visitée, site d'origine (nom de domaine seulement), type
+                d'appareil et pays approximatif. Rien n'est déposé sur votre appareil, votre adresse IP n'est jamais
+                enregistrée et l'empreinte qui permet de compter les visiteurs change chaque jour : elle ne permet ni de
+                vous identifier ni de vous suivre d'un jour à l'autre. Ces statistiques sont conservées 13 mois. Si votre
+                navigateur envoie le signal « Ne pas me suivre » (Do Not Track ou Global Privacy Control), aucune visite
+                n'est comptée.
+              </p>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm border border-gray-200 rounded-xl overflow-hidden">
                   <thead className="bg-gray-50 text-left text-gray-700">
