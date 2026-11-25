@@ -5,6 +5,7 @@ import { activitiesApi } from '../lib/api';
 import { formatDate } from '../lib/format';
 import DepartmentIcon from '../components/DepartmentIcon';
 import type { Activity, Department } from '../types/database';
+import EmptyState from '../components/EmptyState';
 
 type Dept = { id: Department; label: string; icon: LucideIcon; color: string; bgColor: string; description: string; verse: string; verseRef: string };
 
@@ -128,9 +129,9 @@ export default function DepartmentsPage() {
               </div>
 
               {activities.length === 0 ? (
-                <div className="py-16 text-center text-gray-400 bg-gray-50 rounded-2xl">
-                  <Calendar size={32} className="mx-auto mb-3 opacity-40" />
-                  <p className="text-sm">Aucune activité prévue pour ce département.</p>
+                <div className="bg-gray-50 rounded-2xl">
+                  <EmptyState size="sm" illustration="calendar" title="Aucune activité prévue"
+                    description="Les prochaines activités de ce département apparaîtront ici dès leur publication." />
                 </div>
               ) : (
                 <div className="space-y-4">

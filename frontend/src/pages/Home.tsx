@@ -10,6 +10,7 @@ import Reveal from '../components/Reveal';
 import CountUp from '../components/CountUp';
 import OrganicFloat from '../components/OrganicFloat';
 import TiltCard from '../components/TiltCard';
+import EmptyState from '../components/EmptyState';
 import DepartmentIcon from '../components/DepartmentIcon';
 import GalleryLightbox from '../components/GalleryLightbox';
 import { imageUrl, imageSrcSet, preloadVideo } from '../lib/media';
@@ -263,6 +264,11 @@ function ActivitiesSection({ activities, loading }: { activities: Activity[]; lo
               <div key={i} className="rounded-2xl bg-gray-100 animate-pulse h-64" />
             ))}
           </div>
+        ) : activities.length === 0 ? (
+          <div className="rounded-3xl bg-white ring-1 ring-gray-100">
+            <EmptyState size="sm" illustration="calendar" title="Aucune activité programmée pour le moment"
+              description="Les prochaines rencontres seront annoncées ici. Restez connectés !" />
+          </div>
         ) : (
           <Reveal className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
             {activities.slice(0, 4).map(activity => (
@@ -329,6 +335,11 @@ function NewsSection({ news, loading }: { news: News[]; loading: boolean }) {
             {Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="rounded-2xl bg-gray-100 animate-pulse h-72" />
             ))}
+          </div>
+        ) : news.length === 0 ? (
+          <div className="rounded-3xl bg-white ring-1 ring-gray-100">
+            <EmptyState size="sm" illustration="news" title="Aucune actualité pour le moment"
+              description="Les nouvelles de la zone seront publiées ici très bientôt." />
           </div>
         ) : (
           <Reveal className="grid md:grid-cols-3 gap-8">

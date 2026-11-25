@@ -6,6 +6,7 @@ import Reveal from '../components/Reveal';
 import TiltCard from '../components/TiltCard';
 import GalleryLightbox from '../components/GalleryLightbox';
 import type { GalleryItem, Department } from '../types/database';
+import EmptyState from '../components/EmptyState';
 
 const DEPARTMENTS: Department[] = ['Tous', 'Hommes', 'Femmes', 'Jeunesse', 'Enfants'];
 
@@ -112,10 +113,14 @@ export default function GalleryPage() {
               ))}
             </div>
           ) : items.length === 0 ? (
-            <div className="text-center py-24 text-gray-400">
-              <ZoomIn size={40} className="mx-auto mb-4 opacity-40" />
-              <p>Aucune photo ni vidéo disponible pour ce filtre.</p>
-            </div>
+            <EmptyState
+              illustration="gallery"
+              title={filter === 'Tous' ? 'La galerie se remplit bientôt' : 'Rien pour ce département'}
+              description={filter === 'Tous'
+                ? 'Les photos et vidéos de nos rencontres seront publiées ici.'
+                : 'Aucune photo ni vidéo pour ce département pour le moment.'}
+              action={filter !== 'Tous' && <button onClick={() => setFilter('Tous')} className="btn-outline text-sm">Voir toute la galerie</button>}
+            />
           ) : (
             <Reveal className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4 overflow-hidden">
               {items.map((item, i) => (

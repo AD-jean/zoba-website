@@ -1,4 +1,5 @@
 import { useId, useMemo, useState } from 'react';
+import EmptyStateBase, { type IllustrationName } from '../EmptyState';
 
 /**
  * Petits graphiques SVG du tableau de bord (aucune dépendance).
@@ -197,13 +198,9 @@ export function BarList({ items, color = CHART_COLORS[0], format = (k: string) =
   );
 }
 
-export function EmptyState({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="flex flex-col items-center justify-center text-center py-10 px-4 text-sm text-gray-400">
-      <svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mb-3 text-gray-300">
-        <path d="M3 3v18h18" /><path d="M7 15l4-4 3 3 5-6" />
-      </svg>
-      {children}
-    </div>
-  );
+/** État vide illustré, aux couleurs de l'admin. */
+export function EmptyState({ illustration = 'chart', title, children }: {
+  illustration?: IllustrationName; title: string; children?: React.ReactNode;
+}) {
+  return <EmptyStateBase palette="admin" size="sm" illustration={illustration} title={title} description={children} />;
 }

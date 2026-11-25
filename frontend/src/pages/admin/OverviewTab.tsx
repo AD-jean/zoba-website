@@ -127,7 +127,7 @@ export default function OverviewTab({ onNavigate }: { onNavigate: (target: Overv
               ]}
             />
           ) : (
-            <EmptyState>Aucune visite enregistrée pour l'instant.<br />La courbe se remplira dès les premières visites du site.</EmptyState>
+            <EmptyState illustration="chart" title="Aucune visite pour l'instant">La courbe se remplira dès les premières visites du site.</EmptyState>
           )}
         </Panel>
 
@@ -136,7 +136,7 @@ export default function OverviewTab({ onNavigate }: { onNavigate: (target: Overv
           {slices.length ? (
             <DonutChart slices={slices} centerLabel="Répartition des dons par moyen de paiement" />
           ) : (
-            <EmptyState>Aucun don confirmé pour l'instant.</EmptyState>
+            <EmptyState illustration="donation" title="Aucun don confirmé">La répartition apparaîtra dès le premier don reçu.</EmptyState>
           )}
         </Panel>
       </div>
@@ -181,7 +181,7 @@ export default function OverviewTab({ onNavigate }: { onNavigate: (target: Overv
                 </tbody>
               </table>
             </div>
-          ) : <EmptyState>Aucune inscription pour l'instant.</EmptyState>
+          ) : <EmptyState illustration="people" title="Aucune inscription pour l'instant">Les inscriptions aux activités s'afficheront ici.</EmptyState>
         ) : (
           data.latestDonations.length ? (
             <div className="overflow-x-auto">
@@ -208,7 +208,7 @@ export default function OverviewTab({ onNavigate }: { onNavigate: (target: Overv
                 </tbody>
               </table>
             </div>
-          ) : <EmptyState>Aucun don pour l'instant.</EmptyState>
+          ) : <EmptyState illustration="donation" title="Aucun don pour l'instant">Les dons reçus s'afficheront ici, avec leur statut.</EmptyState>
         )}
       </Panel>
     </div>

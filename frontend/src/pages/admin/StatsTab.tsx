@@ -82,7 +82,7 @@ export default function StatsTab() {
 
           <Panel title="Audience" subtitle={period === '12m' ? 'Par mois' : 'Par jour'}>
             {empty ? (
-              <EmptyState>Aucune visite sur cette période.</EmptyState>
+              <EmptyState illustration="chart" title="Aucune visite sur cette période">Essayez une période plus longue.</EmptyState>
             ) : (
               <AreaChart
                 labels={data.series.map(p => formatBucket(p.key))}
@@ -114,7 +114,7 @@ export default function StatsTab() {
               <Panel title="Pays" subtitle="Approximatif">
                 {data.countries.length
                   ? <BarList items={data.countries} color={CHART_COLORS[1]} format={k => countryNames?.of(k) ?? k} />
-                  : <EmptyState>Pays non déterminé pour l'instant.</EmptyState>}
+                  : <EmptyState illustration="search" title="Pays non déterminé">Il s'affichera dès que des visiteurs seront localisés.</EmptyState>}
               </Panel>
             </div>
           )}

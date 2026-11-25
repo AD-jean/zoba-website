@@ -9,6 +9,7 @@ import {
   LogOut, Plus, Trash2, Check, X, Edit2, Save, ClipboardList, QrCode,
   LayoutDashboard, BarChart3, Settings, Search, Bell, Menu, ChevronDown, ExternalLink, ShieldCheck
 } from 'lucide-react';
+import { EmptyState } from '../../components/admin/charts';
 import type {
   Activity, ActivityInsert, News, NewsInsert,
   GalleryItem, GalleryInsert, Member, MemberInsert,
@@ -130,6 +131,7 @@ function ActivitiesTab() {
         </div>
       )}
 
+      {items.length === 0 && !editing && <EmptyState illustration="calendar" title="Aucune activité">Créez la première avec le bouton « Ajouter ».</EmptyState>}
       <div className="space-y-3">
         {items.map(item => (
           <div key={item._id} className="flex items-center gap-4 p-4 bg-white rounded-xl border border-gray-100 transition-all duration-200 hover:border-teal-200 hover:shadow-sm">
@@ -217,6 +219,7 @@ function NewsTab() {
         </div>
       )}
 
+      {items.length === 0 && !editing && <EmptyState illustration="news" title="Aucune actualité">Publiez la première avec le bouton « Ajouter ».</EmptyState>}
       <div className="space-y-3">
         {items.map(item => (
           <div key={item._id} className="flex items-start gap-4 p-4 bg-white rounded-xl border border-gray-100 transition-all duration-200 hover:border-teal-200 hover:shadow-sm">
@@ -327,6 +330,7 @@ function GalleryTab() {
         </div>
       )}
 
+      {items.length === 0 && !adding && <EmptyState illustration="gallery" title="Galerie vide">Ajoutez vos premières photos ou vidéos avec le bouton « Ajouter ».</EmptyState>}
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
         {items.map(item => (
           <div key={item._id} className="relative group rounded-xl overflow-hidden aspect-square bg-gray-100">
@@ -392,7 +396,8 @@ function MembersTab() {
 
       {editing && (
         <div className="bg-teal-50 rounded-xl p-6 border border-teal-200 space-y-4">
-          <div className="grid sm:grid-cols-2 gap-4">
+          {items.length === 0 && !editing && <EmptyState illustration="people" title="Aucun membre">Présentez l'équipe en ajoutant un premier membre.</EmptyState>}
+      <div className="grid sm:grid-cols-2 gap-4">
             <div>
               <label className="text-xs text-gray-600 font-medium mb-1 block">Nom *</label>
               <input className="input-field" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
@@ -468,7 +473,7 @@ function ContactsTab() {
     <div className="space-y-6">
       <h2 className="font-bold text-[#002060] text-lg">Messages reçus ({items.length})</h2>
       <div className="space-y-3">
-        {items.length === 0 && <p className="text-gray-400 text-sm py-8 text-center">Aucun message.</p>}
+        {items.length === 0 && <EmptyState illustration="inbox" title="Aucun message">Les messages du formulaire de contact arriveront ici.</EmptyState>}
         {items.map(item => (
           <div key={item._id} className={`p-5 rounded-xl border ${item.isRead ? 'border-gray-100 bg-white' : 'border-teal-200 bg-teal-50'}`}>
             <div className="flex items-start justify-between gap-4">
@@ -511,7 +516,7 @@ function SubscribersTab() {
     <div className="space-y-6">
       <h2 className="font-bold text-[#002060] text-lg">Abonnés ({items.length} · {active} actifs)</h2>
       <div className="space-y-2">
-        {items.length === 0 && <p className="text-gray-400 text-sm py-8 text-center">Aucun abonné.</p>}
+        {items.length === 0 && <EmptyState illustration="newsletter" title="Aucun abonné">Les inscriptions à la newsletter s'afficheront ici.</EmptyState>}
         {items.map(item => (
           <div key={item._id} className="flex items-center gap-4 p-3 bg-white rounded-xl border border-gray-100 transition-all duration-200 hover:border-teal-200 hover:shadow-sm">
             <div className={`w-2 h-2 rounded-full flex-shrink-0 ${item.active ? 'bg-green-500' : 'bg-gray-300'}`} />
@@ -554,7 +559,7 @@ function RegistrationsTab() {
     <div className="space-y-6">
       <h2 className="font-bold text-[#002060] text-lg">Inscriptions ({items.length})</h2>
       <div className="space-y-3">
-        {items.length === 0 && <p className="text-gray-400 text-sm py-8 text-center">Aucune inscription.</p>}
+        {items.length === 0 && <EmptyState illustration="people" title="Aucune inscription">Les inscriptions aux activités s'afficheront ici.</EmptyState>}
         {items.map(item => (
           <div key={item._id} className="flex flex-wrap items-center gap-4 p-4 bg-white rounded-xl border border-gray-100 transition-all duration-200 hover:border-teal-200 hover:shadow-sm">
             <div className="flex-1 min-w-0">
@@ -605,7 +610,7 @@ function DonationsTab() {
         </div>
       </div>
       <div className="space-y-3">
-        {items.length === 0 && <p className="text-gray-400 text-sm py-8 text-center">Aucun don enregistré.</p>}
+        {items.length === 0 && <EmptyState illustration="donation" title="Aucun don enregistré">Les dons reçus s'afficheront ici, avec leur statut.</EmptyState>}
         {items.map(item => (
           <div key={item._id} className="flex flex-wrap items-center gap-4 p-4 bg-white rounded-xl border border-gray-100 transition-all duration-200 hover:border-teal-200 hover:shadow-sm">
             <div className="flex-1 min-w-0">
