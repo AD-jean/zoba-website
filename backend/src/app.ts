@@ -14,6 +14,7 @@ import registrationRoutes from './routes/registration.routes';
 import donationRoutes from './routes/donation.routes';
 import donationWebhookRoutes from './routes/donation.webhook.routes';
 import uploadRoutes from './routes/upload.routes';
+import analyticsRoutes from './routes/analytics.routes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 
 const app = express();
@@ -61,6 +62,7 @@ app.use('/api/subscribers', subscriberRoutes);
 app.use('/api/registrations', registrationRoutes);
 app.use('/api/donations', donationRoutes);
 app.use('/api/uploads', uploadRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 app.get('/api/health', (req, res) => {
   const dbConnected = mongoose.connection.readyState === 1;
