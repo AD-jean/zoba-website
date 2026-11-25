@@ -41,10 +41,10 @@ function track(path: string) {
 }
 
 /** Compte une page vue à chaque changement de route du site public (jamais l'admin). */
-export function usePageTracking() {
+export function usePageTracking(skip: boolean) {
   const { pathname } = useLocation();
   useEffect(() => {
-    if (pathname.startsWith('/admin') || doNotTrack()) return;
+    if (skip || doNotTrack()) return;
     track(pathname);
-  }, [pathname]);
+  }, [pathname, skip]);
 }

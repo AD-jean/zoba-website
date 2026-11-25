@@ -1,4 +1,5 @@
 import type { Ticket } from '../types/database';
+import { isAdminArea } from './adminPath';
 
 export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
@@ -18,7 +19,7 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
   });
 
   // Session admin expiree ou revoquee : on oublie le jeton et on revient a la connexion.
-  if (response.status === 401 && token && endpoint !== '/auth/login' && window.location.pathname.startsWith('/admin')) {
+  if (response.status === 401 && token && endpoint !== '/auth/login' && isAdminArea()) {
     localStorage.removeItem('adminToken');
     window.location.reload();
   }
