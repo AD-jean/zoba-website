@@ -27,7 +27,7 @@ function Tile({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-white rounded-2xl ring-1 ring-gray-100 shadow-sm px-4 py-3.5">
       <p className="text-xs text-gray-400">{label}</p>
-      <p className="text-xl sm:text-2xl font-bold text-[#002060] tabular-nums mt-0.5">{value}</p>
+      <p className="text-xl sm:text-2xl font-bold text-[#0e4a56] tabular-nums mt-0.5">{value}</p>
     </div>
   );
 }
@@ -57,13 +57,13 @@ export default function StatsTab() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-lg font-bold text-[#002060]">Statistiques de visite</h1>
+          <h1 className="text-lg font-bold text-[#0e4a56]">Statistiques de visite</h1>
           <p className="text-xs text-gray-400">{current.long} · mesure anonyme, sans cookie</p>
         </div>
         <div className="inline-flex rounded-xl bg-white ring-1 ring-gray-200 p-1 text-sm font-medium shadow-sm" role="group" aria-label="Période">
           {PERIODS.map(p => (
             <button key={p.id} onClick={() => setPeriod(p.id)} aria-pressed={period === p.id}
-              className={`px-3.5 py-1.5 rounded-lg transition-colors ${period === p.id ? 'bg-[#002060] text-white' : 'text-gray-500 hover:text-[#002060]'}`}>
+              className={`px-3.5 py-1.5 rounded-lg transition-colors ${period === p.id ? 'bg-[#0e4a56] text-white' : 'text-gray-500 hover:text-[#0e4a56]'}`}>
               {p.label}
             </button>
           ))}

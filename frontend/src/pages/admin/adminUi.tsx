@@ -9,7 +9,7 @@ export function Panel({ title, subtitle, action, className = '', children }: {
         <div className="flex items-start gap-2.5">
           <span className="mt-0.5 w-1.5 h-5 rounded-full bg-[#F2A900]" aria-hidden />
           <div>
-            <h2 className="font-semibold text-[#002060] text-[15px] leading-tight">{title}</h2>
+            <h2 className="font-semibold text-[#0e4a56] text-[15px] leading-tight">{title}</h2>
             {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
           </div>
         </div>

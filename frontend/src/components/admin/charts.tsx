@@ -3,9 +3,9 @@ import EmptyStateBase, { type IllustrationName } from '../EmptyState';
 
 /**
  * Petits graphiques SVG du tableau de bord (aucune dépendance).
- * Palette catégorielle validée (lisibilité daltonisme) : bleu, or, vert, dans cet ordre.
+ * Palette catégorielle aux couleurs du site : sarcelle, or, ardoise, dans cet ordre.
  */
-export const CHART_COLORS = ['#1f4fbf', '#D18F00', '#0f8f7a'] as const;
+export const CHART_COLORS = ['#1a6b7a', '#D18F00', '#64748b'] as const;
 
 export const nf = new Intl.NumberFormat('fr-FR');
 

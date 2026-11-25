@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 
 /**
  * Illustrations des espaces vides (« aucune activité », « aucun message »...).
- * Dessinées en SVG, sans dépendance, aux couleurs du site (sarcelle) ou de l'admin (marine).
+ * Dessinées en SVG, sans dépendance, aux couleurs sarcelle et or du site (variante admin un ton plus soutenu).
  */
 
 export type IllustrationName =
@@ -12,7 +12,7 @@ type Palette = { ink: string; main: string; soft: string; wash: string; line: st
 
 const PALETTES: Record<'site' | 'admin', Palette> = {
   site: { ink: '#0e4a56', main: '#2a8ea3', soft: '#9ecfda', wash: '#e8f4f6', line: '#d3e8ed', accent: '#F2A900', accentDark: '#c98a00' },
-  admin: { ink: '#002060', main: '#1f4fbf', soft: '#a9c0f2', wash: '#eef3fd', line: '#dbe4f7', accent: '#F2A900', accentDark: '#c98a00' },
+  admin: { ink: '#0e4a56', main: '#1a6b7a', soft: '#9ecfda', wash: '#e8f4f6', line: '#d3e8ed', accent: '#F2A900', accentDark: '#c98a00' },
 };
 
 const sparkle = (x: number, y: number, r: number) =>
@@ -212,7 +212,7 @@ export default function EmptyState({ illustration, title, description, action, p
   return (
     <div role="status" className={`flex flex-col items-center text-center px-4 ${small ? 'py-6' : 'py-14'} ${className}`}>
       <Illustration name={illustration} palette={palette} className={small ? 'w-40 h-auto' : 'w-56 sm:w-64 h-auto'} />
-      <p className={`mt-3 font-semibold ${small ? 'text-[15px]' : 'text-lg font-display'} ${palette === 'admin' ? 'text-[#002060]' : 'text-teal-800'}`}>
+      <p className={`mt-3 font-semibold ${small ? 'text-[15px]' : 'text-lg font-display'} ${palette === 'admin' ? 'text-[#0e4a56]' : 'text-teal-800'}`}>
         {title}
       </p>
       {description && <p className="mt-1.5 max-w-sm text-sm leading-relaxed text-gray-500">{description}</p>}

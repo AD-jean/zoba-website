@@ -74,7 +74,7 @@ export default function OverviewTab({ onNavigate }: { onNavigate: (target: Overv
         <KpiCard
           label="Dons du mois" icon={<Heart size={18} />}
           value={`${nf.format(kpis.donationsMonth.amount)} F`}
-          className="bg-gradient-to-br from-[#F2A900] to-[#e09400] text-[#002060] col-span-2 md:col-span-3 xl:col-span-1"
+          className="bg-gradient-to-br from-[#F2A900] to-[#e09400] text-[#0e4a56] col-span-2 md:col-span-3 xl:col-span-1"
           onClick={() => onNavigate('donations')}
           sub={trend === null
             ? <>{donCount} don{donCount > 1 ? 's' : ''} confirmé{donCount > 1 ? 's' : ''}</>
@@ -83,14 +83,14 @@ export default function OverviewTab({ onNavigate }: { onNavigate: (target: Overv
         <KpiCard
           label="Inscriptions" icon={<ClipboardList size={18} />}
           value={nf.format(kpis.registrations.total)}
-          className="bg-gradient-to-br from-[#2f5fd0] to-[#1f4fbf] text-white md:col-span-3 xl:col-span-1"
+          className="bg-gradient-to-br from-[#2a8ea3] to-[#1a6b7a] text-white md:col-span-3 xl:col-span-1"
           onClick={() => onNavigate('registrations')}
           sub={<>+{nf.format(kpis.registrations.month)} ce mois-ci</>}
         />
         <KpiCard
           label="Abonnés newsletter" icon={<Mail size={18} />}
           value={nf.format(kpis.subscribers.active)}
-          className="bg-gradient-to-br from-[#14a08a] to-[#0f8f7a] text-white md:col-span-2 xl:col-span-1"
+          className="bg-gradient-to-br from-[#9ecfda] to-[#6eb8cb] text-[#073340] md:col-span-2 xl:col-span-1"
           onClick={() => onNavigate('subscribers')}
           sub={<>+{nf.format(kpis.subscribers.month)} ce mois-ci</>}
         />
@@ -104,7 +104,7 @@ export default function OverviewTab({ onNavigate }: { onNavigate: (target: Overv
         <KpiCard
           label="Visiteurs (30 j)" icon={<Eye size={18} />}
           value={nf.format(kpis.visitors.visitors)}
-          className="bg-gradient-to-br from-[#0b2f7a] to-[#002060] text-white md:col-span-2 xl:col-span-1"
+          className="bg-gradient-to-br from-[#0e4a56] to-[#073340] text-white md:col-span-2 xl:col-span-1"
           onClick={() => onNavigate('stats')}
           sub={<>{nf.format(kpis.visitors.views)} pages vues</>}
         />
@@ -116,7 +116,7 @@ export default function OverviewTab({ onNavigate }: { onNavigate: (target: Overv
           className="lg:col-span-2"
           title="Audience du site"
           subtitle="30 derniers jours"
-          action={<button onClick={() => onNavigate('stats')} className="text-xs font-semibold text-[#1f4fbf] hover:underline flex items-center gap-1">Statistiques <ArrowRight size={13} /></button>}
+          action={<button onClick={() => onNavigate('stats')} className="text-xs font-semibold text-[#1a6b7a] hover:underline flex items-center gap-1">Statistiques <ArrowRight size={13} /></button>}
         >
           {hasTraffic ? (
             <AreaChart
@@ -148,7 +148,7 @@ export default function OverviewTab({ onNavigate }: { onNavigate: (target: Overv
           <div className="inline-flex rounded-lg bg-gray-100 p-0.5 text-xs font-medium">
             {(['registrations', 'donations'] as const).map(t => (
               <button key={t} onClick={() => setTable(t)}
-                className={`px-3 py-1.5 rounded-md transition-colors ${table === t ? 'bg-white text-[#002060] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+                className={`px-3 py-1.5 rounded-md transition-colors ${table === t ? 'bg-white text-[#0e4a56] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
                 {t === 'registrations' ? 'Inscriptions' : 'Dons'}
               </button>
             ))}
@@ -160,7 +160,7 @@ export default function OverviewTab({ onNavigate }: { onNavigate: (target: Overv
             <div className="overflow-x-auto">
               <table className="w-full text-sm min-w-[520px]">
                 <thead>
-                  <tr className="bg-[#1f4fbf] text-white text-left text-xs">
+                  <tr className="bg-[#1a6b7a] text-white text-left text-xs">
                     <th className="px-4 py-2.5 font-semibold rounded-l-lg">Nom</th>
                     <th className="px-4 py-2.5 font-semibold">Activité</th>
                     <th className="px-4 py-2.5 font-semibold">Date</th>
@@ -187,7 +187,7 @@ export default function OverviewTab({ onNavigate }: { onNavigate: (target: Overv
             <div className="overflow-x-auto">
               <table className="w-full text-sm min-w-[560px]">
                 <thead>
-                  <tr className="bg-[#1f4fbf] text-white text-left text-xs">
+                  <tr className="bg-[#1a6b7a] text-white text-left text-xs">
                     <th className="px-4 py-2.5 font-semibold rounded-l-lg">Donateur</th>
                     <th className="px-4 py-2.5 font-semibold text-right">Montant</th>
                     <th className="px-4 py-2.5 font-semibold">Moyen</th>

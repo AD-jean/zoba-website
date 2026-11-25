@@ -73,7 +73,7 @@ function ActivitiesTab() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="font-bold text-[#002060] text-lg">Activités ({items.length})</h2>
+        <h2 className="font-bold text-[#0e4a56] text-lg">Activités ({items.length})</h2>
         <button onClick={() => { setEditing(true); setEditId(null); }} className="btn-primary text-sm py-2">
           <Plus size={15} /> Ajouter
         </button>
@@ -190,7 +190,7 @@ function NewsTab() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="font-bold text-[#002060] text-lg">Actualités ({items.length})</h2>
+        <h2 className="font-bold text-[#0e4a56] text-lg">Actualités ({items.length})</h2>
         <button onClick={() => { setEditing(true); setEditId(null); }} className="btn-primary text-sm py-2"><Plus size={15} /> Ajouter</button>
       </div>
 
@@ -281,7 +281,7 @@ function GalleryTab() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="font-bold text-[#002060] text-lg">Galerie ({items.length})</h2>
+        <h2 className="font-bold text-[#0e4a56] text-lg">Galerie ({items.length})</h2>
         <button onClick={() => setAdding(true)} className="btn-primary text-sm py-2"><Plus size={15} /> Ajouter</button>
       </div>
 
@@ -390,7 +390,7 @@ function MembersTab() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="font-bold text-[#002060] text-lg">Bureau ({items.length})</h2>
+        <h2 className="font-bold text-[#0e4a56] text-lg">Bureau ({items.length})</h2>
         <button onClick={() => { setEditing(true); setEditId(null); }} className="btn-primary text-sm py-2"><Plus size={15} /> Ajouter</button>
       </div>
 
@@ -471,7 +471,7 @@ function ContactsTab() {
 
   return (
     <div className="space-y-6">
-      <h2 className="font-bold text-[#002060] text-lg">Messages reçus ({items.length})</h2>
+      <h2 className="font-bold text-[#0e4a56] text-lg">Messages reçus ({items.length})</h2>
       <div className="space-y-3">
         {items.length === 0 && <EmptyState illustration="inbox" title="Aucun message">Les messages du formulaire de contact arriveront ici.</EmptyState>}
         {items.map(item => (
@@ -514,7 +514,7 @@ function SubscribersTab() {
 
   return (
     <div className="space-y-6">
-      <h2 className="font-bold text-[#002060] text-lg">Abonnés ({items.length} · {active} actifs)</h2>
+      <h2 className="font-bold text-[#0e4a56] text-lg">Abonnés ({items.length} · {active} actifs)</h2>
       <div className="space-y-2">
         {items.length === 0 && <EmptyState illustration="newsletter" title="Aucun abonné">Les inscriptions à la newsletter s'afficheront ici.</EmptyState>}
         {items.map(item => (
@@ -557,7 +557,7 @@ function RegistrationsTab() {
 
   return (
     <div className="space-y-6">
-      <h2 className="font-bold text-[#002060] text-lg">Inscriptions ({items.length})</h2>
+      <h2 className="font-bold text-[#0e4a56] text-lg">Inscriptions ({items.length})</h2>
       <div className="space-y-3">
         {items.length === 0 && <EmptyState illustration="people" title="Aucune inscription">Les inscriptions aux activités s'afficheront ici.</EmptyState>}
         {items.map(item => (
@@ -603,7 +603,7 @@ function DonationsTab() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="font-bold text-[#002060] text-lg">Dons ({items.length})</h2>
+        <h2 className="font-bold text-[#0e4a56] text-lg">Dons ({items.length})</h2>
         <div className="bg-teal-50 border border-teal-200 rounded-xl px-4 py-2 text-right">
           <p className="text-xs text-teal-500">Total reçu</p>
           <p className="font-bold text-teal-700">{total.toLocaleString('fr-FR')} XOF</p>
@@ -632,9 +632,9 @@ function DonationsTab() {
 function SettingsTab({ admin, onLogout }: { admin: AdminUser; onLogout: () => void }) {
   return (
     <div className="space-y-6 max-w-2xl">
-      <h2 className="font-bold text-[#002060] text-lg">Paramètres</h2>
+      <h2 className="font-bold text-[#0e4a56] text-lg">Paramètres</h2>
       <div className="flex flex-wrap items-center gap-4 p-5 rounded-2xl ring-1 ring-gray-100 bg-gray-50/60">
-        <div className="w-12 h-12 rounded-full bg-[#002060] text-[#F2A900] font-bold text-lg flex items-center justify-center">
+        <div className="w-12 h-12 rounded-full bg-[#0e4a56] text-[#F2A900] font-bold text-lg flex items-center justify-center">
           {(admin.name || admin.email).charAt(0).toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
@@ -651,7 +651,7 @@ function SettingsTab({ admin, onLogout }: { admin: AdminUser; onLogout: () => vo
           Les visites du site sont comptées sans cookie : ni adresse IP ni identifiant ne sont enregistrés, et
           l'empreinte anonyme d'un visiteur change chaque jour. Les données sont effacées automatiquement après 13 mois.
         </p>
-        <a href="/confidentialite#cookies" target="_blank" rel="noreferrer" className="inline-block text-[#1f4fbf] font-medium hover:underline">
+        <a href="/confidentialite#cookies" target="_blank" rel="noreferrer" className="inline-block text-[#1a6b7a] font-medium hover:underline">
           Voir la politique de confidentialité
         </a>
       </div>
@@ -754,17 +754,17 @@ export default function AdminDashboard({ admin, onLogout }: { admin: AdminUser; 
   const bare = section === 'overview' || section === 'stats';
 
   return (
-    <div className="min-h-screen bg-[#f3f5fa] lg:p-4">
+    <div className="min-h-screen bg-[#f1f6f7] lg:p-4">
       {/* Voile du menu mobile */}
       <div
-        className={`fixed inset-0 z-40 bg-[#001233]/50 backdrop-blur-[2px] transition-opacity lg:hidden ${drawer ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        className={`fixed inset-0 z-40 bg-[#031e27]/50 backdrop-blur-[2px] transition-opacity lg:hidden ${drawer ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
         onClick={() => setDrawer(false)}
         aria-hidden
       />
 
       {/* Barre latérale */}
       <aside
-        className={`fixed z-50 inset-y-0 left-0 w-64 bg-gradient-to-b from-[#002060] to-[#001540] text-white flex flex-col
+        className={`fixed z-50 inset-y-0 left-0 w-64 bg-gradient-to-b from-[#0e4a56] to-[#052a33] text-white flex flex-col
           transition-transform duration-300 lg:translate-x-0 lg:inset-y-4 lg:left-4 lg:rounded-2xl lg:shadow-xl
           ${drawer ? 'translate-x-0' : '-translate-x-full'}`}
         aria-label="Menu d'administration"
@@ -796,7 +796,7 @@ export default function AdminDashboard({ admin, onLogout }: { admin: AdminUser; 
                         <span className={active ? 'text-[#F2A900]' : ''}>{item.icon}</span>
                         {item.label}
                         {item.id === 'contacts' && unread.length > 0 && (
-                          <span className="ml-auto min-w-[1.25rem] h-5 px-1.5 rounded-full bg-[#F2A900] text-[#002060] text-[11px] font-bold flex items-center justify-center">{unread.length}</span>
+                          <span className="ml-auto min-w-[1.25rem] h-5 px-1.5 rounded-full bg-[#F2A900] text-[#0e4a56] text-[11px] font-bold flex items-center justify-center">{unread.length}</span>
                         )}
                       </button>
                     </li>
@@ -809,7 +809,7 @@ export default function AdminDashboard({ admin, onLogout }: { admin: AdminUser; 
         <div className="m-3 p-3 rounded-xl bg-white/5 ring-1 ring-white/10 flex items-center justify-between gap-2">
           <p className="text-xs text-white/60">Site public</p>
           <a href="/" target="_blank" rel="noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-lg bg-[#F2A900] text-[#002060] text-xs font-bold px-3 py-1.5 hover:brightness-105 transition">
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[#F2A900] text-[#0e4a56] text-xs font-bold px-3 py-1.5 hover:brightness-105 transition">
             Ouvrir le site <ExternalLink size={12} />
           </a>
         </div>
@@ -818,18 +818,18 @@ export default function AdminDashboard({ admin, onLogout }: { admin: AdminUser; 
       {/* Zone principale */}
       <div className="lg:pl-[17rem]">
         <header className="sticky top-0 lg:top-4 z-30 bg-white/90 backdrop-blur lg:rounded-2xl shadow-sm ring-1 ring-gray-100 px-3 sm:px-5 py-3 flex items-center gap-2 sm:gap-3">
-          <button onClick={() => setDrawer(true)} className="lg:hidden p-2 -ml-1 rounded-lg text-[#002060] hover:bg-gray-100" aria-label="Ouvrir le menu">
+          <button onClick={() => setDrawer(true)} className="lg:hidden p-2 -ml-1 rounded-lg text-[#0e4a56] hover:bg-gray-100" aria-label="Ouvrir le menu">
             <Menu size={20} />
           </button>
           <div className="min-w-0">
             <p className="text-[11px] text-gray-400 leading-none hidden sm:block">ZOBA · Administration</p>
-            <h1 className="font-bold text-[#002060] truncate sm:mt-1">{current.label}</h1>
+            <h1 className="font-bold text-[#0e4a56] truncate sm:mt-1">{current.label}</h1>
           </div>
 
           <div className="ml-auto flex items-center gap-1 sm:gap-2">
             {/* Recherche dans les rubriques */}
             <div ref={searchRef} className="relative">
-              <label className="flex items-center gap-2 bg-gray-100 rounded-xl px-3 py-2 w-32 sm:w-56 focus-within:ring-2 focus-within:ring-[#1f4fbf]/40 focus-within:bg-white transition">
+              <label className="flex items-center gap-2 bg-gray-100 rounded-xl px-3 py-2 w-32 sm:w-56 focus-within:ring-2 focus-within:ring-[#1a6b7a]/40 focus-within:bg-white transition">
                 <Search size={16} className="text-gray-400 flex-shrink-0" />
                 <input
                   value={query}
@@ -845,7 +845,7 @@ export default function AdminDashboard({ admin, onLogout }: { admin: AdminUser; 
                 <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl ring-1 ring-black/5 py-1.5 z-10">
                   {results.length ? results.map(r => (
                     <button key={r.id} onClick={() => go(r.id)} className="w-full flex items-center gap-3 px-3.5 py-2 text-sm text-gray-700 hover:bg-gray-50">
-                      <span className="text-[#1f4fbf]">{r.icon}</span>{r.label}
+                      <span className="text-[#1a6b7a]">{r.icon}</span>{r.label}
                     </button>
                   )) : <p className="px-3.5 py-2 text-sm text-gray-400">Aucune rubrique trouvée</p>}
                 </div>
@@ -854,13 +854,13 @@ export default function AdminDashboard({ admin, onLogout }: { admin: AdminUser; 
 
             {/* Notifications : messages non lus */}
             <div ref={notifRef} className="relative">
-              <button onClick={() => setNotifOpen(o => !o)} className="relative p-2 rounded-xl text-gray-500 hover:text-[#002060] hover:bg-gray-100 transition" aria-label={`Notifications (${unread.length} non lues)`}>
+              <button onClick={() => setNotifOpen(o => !o)} className="relative p-2 rounded-xl text-gray-500 hover:text-[#0e4a56] hover:bg-gray-100 transition" aria-label={`Notifications (${unread.length} non lues)`}>
                 <Bell size={19} />
                 {unread.length > 0 && <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white">{unread.length > 9 ? '9+' : unread.length}</span>}
               </button>
               {notifOpen && (
                 <div className="absolute right-0 mt-2 w-[min(20rem,calc(100vw-1.5rem))] bg-white rounded-xl shadow-xl ring-1 ring-black/5 z-10 overflow-hidden">
-                  <p className="px-4 py-3 text-sm font-semibold text-[#002060] border-b border-gray-100">Messages non lus</p>
+                  <p className="px-4 py-3 text-sm font-semibold text-[#0e4a56] border-b border-gray-100">Messages non lus</p>
                   {unread.length ? (
                     <ul className="max-h-72 overflow-y-auto divide-y divide-gray-50">
                       {unread.slice(0, 5).map(m => (
@@ -880,7 +880,7 @@ export default function AdminDashboard({ admin, onLogout }: { admin: AdminUser; 
             {/* Profil */}
             <div ref={profileRef} className="relative">
               <button onClick={() => setProfileOpen(o => !o)} className="flex items-center gap-2 p-1 sm:pr-2 rounded-xl hover:bg-gray-100 transition" aria-label="Profil">
-                <span className="w-8 h-8 rounded-full bg-[#002060] text-[#F2A900] font-bold text-sm flex items-center justify-center">{initial}</span>
+                <span className="w-8 h-8 rounded-full bg-[#0e4a56] text-[#F2A900] font-bold text-sm flex items-center justify-center">{initial}</span>
                 <ChevronDown size={14} className="text-gray-400 hidden sm:block" />
               </button>
               {profileOpen && (
