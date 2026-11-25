@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import type { AdminUser } from '../../lib/api';
 import {
   activitiesApi, newsApi, galleryApi, membersApi,
@@ -6,7 +6,8 @@ import {
 } from '../../lib/api';
 import {
   BookOpen, Calendar, Image, Users, Mail, MessageSquare, Heart,
-  LogOut, Plus, Trash2, Check, X, Edit2, Save, ClipboardList, QrCode
+  LogOut, Plus, Trash2, Check, X, Edit2, Save, ClipboardList, QrCode,
+  LayoutDashboard, BarChart3, Settings, Search, Bell, Menu, ChevronDown, ExternalLink, ShieldCheck
 } from 'lucide-react';
 import type {
   Activity, ActivityInsert, News, NewsInsert,
@@ -16,20 +17,11 @@ import type {
 import ImageUploadField from '../../components/admin/ImageUploadField';
 import { imageUrl, videoPosterUrl } from '../../lib/media';
 import ScannerTab from './ScannerTab';
+import OverviewTab from './OverviewTab';
+import StatsTab from './StatsTab';
 
 type Tab = 'activities' | 'news' | 'gallery' | 'members' | 'contacts' | 'subscribers' | 'registrations' | 'donations' | 'scanner';
 
-const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-  { id: 'activities', label: 'Activités', icon: <Calendar size={16} /> },
-  { id: 'news', label: 'Actualités', icon: <BookOpen size={16} /> },
-  { id: 'gallery', label: 'Galerie', icon: <Image size={16} /> },
-  { id: 'members', label: 'Bureau', icon: <Users size={16} /> },
-  { id: 'contacts', label: 'Messages', icon: <MessageSquare size={16} /> },
-  { id: 'subscribers', label: 'Newsletter', icon: <Mail size={16} /> },
-  { id: 'registrations', label: 'Inscriptions', icon: <ClipboardList size={16} /> },
-  { id: 'donations', label: 'Dons', icon: <Heart size={16} /> },
-  { id: 'scanner', label: 'Scanner', icon: <QrCode size={16} /> },
-];
 
 const DEPTS: Department[] = ['Tous', 'Hommes', 'Femmes', 'Jeunesse', 'Enfants'];
 
@@ -80,7 +72,7 @@ function ActivitiesTab() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="font-bold text-teal-800 text-lg">Activités ({items.length})</h2>
+        <h2 className="font-bold text-[#002060] text-lg">Activités ({items.length})</h2>
         <button onClick={() => { setEditing(true); setEditId(null); }} className="btn-primary text-sm py-2">
           <Plus size={15} /> Ajouter
         </button>
@@ -196,7 +188,7 @@ function NewsTab() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="font-bold text-teal-800 text-lg">Actualités ({items.length})</h2>
+        <h2 className="font-bold text-[#002060] text-lg">Actualités ({items.length})</h2>
         <button onClick={() => { setEditing(true); setEditId(null); }} className="btn-primary text-sm py-2"><Plus size={15} /> Ajouter</button>
       </div>
 
@@ -286,7 +278,7 @@ function GalleryTab() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="font-bold text-teal-800 text-lg">Galerie ({items.length})</h2>
+        <h2 className="font-bold text-[#002060] text-lg">Galerie ({items.length})</h2>
         <button onClick={() => setAdding(true)} className="btn-primary text-sm py-2"><Plus size={15} /> Ajouter</button>
       </div>
 
@@ -394,7 +386,7 @@ function MembersTab() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="font-bold text-teal-800 text-lg">Bureau ({items.length})</h2>
+        <h2 className="font-bold text-[#002060] text-lg">Bureau ({items.length})</h2>
         <button onClick={() => { setEditing(true); setEditId(null); }} className="btn-primary text-sm py-2"><Plus size={15} /> Ajouter</button>
       </div>
 
@@ -474,7 +466,7 @@ function ContactsTab() {
 
   return (
     <div className="space-y-6">
-      <h2 className="font-bold text-teal-800 text-lg">Messages reçus ({items.length})</h2>
+      <h2 className="font-bold text-[#002060] text-lg">Messages reçus ({items.length})</h2>
       <div className="space-y-3">
         {items.length === 0 && <p className="text-gray-400 text-sm py-8 text-center">Aucun message.</p>}
         {items.map(item => (
@@ -517,7 +509,7 @@ function SubscribersTab() {
 
   return (
     <div className="space-y-6">
-      <h2 className="font-bold text-teal-800 text-lg">Abonnés ({items.length} · {active} actifs)</h2>
+      <h2 className="font-bold text-[#002060] text-lg">Abonnés ({items.length} · {active} actifs)</h2>
       <div className="space-y-2">
         {items.length === 0 && <p className="text-gray-400 text-sm py-8 text-center">Aucun abonné.</p>}
         {items.map(item => (
@@ -560,7 +552,7 @@ function RegistrationsTab() {
 
   return (
     <div className="space-y-6">
-      <h2 className="font-bold text-teal-800 text-lg">Inscriptions ({items.length})</h2>
+      <h2 className="font-bold text-[#002060] text-lg">Inscriptions ({items.length})</h2>
       <div className="space-y-3">
         {items.length === 0 && <p className="text-gray-400 text-sm py-8 text-center">Aucune inscription.</p>}
         {items.map(item => (
@@ -606,7 +598,7 @@ function DonationsTab() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h2 className="font-bold text-teal-800 text-lg">Dons ({items.length})</h2>
+        <h2 className="font-bold text-[#002060] text-lg">Dons ({items.length})</h2>
         <div className="bg-teal-50 border border-teal-200 rounded-xl px-4 py-2 text-right">
           <p className="text-xs text-teal-500">Total reçu</p>
           <p className="font-bold text-teal-700">{total.toLocaleString('fr-FR')} XOF</p>
@@ -630,13 +622,117 @@ function DonationsTab() {
   );
 }
 
-// ─── Dashboard ────────────────────────────────────────────────────────────────
+// ─── Paramètres ───────────────────────────────────────────────────────────────
+
+function SettingsTab({ admin, onLogout }: { admin: AdminUser; onLogout: () => void }) {
+  return (
+    <div className="space-y-6 max-w-2xl">
+      <h2 className="font-bold text-[#002060] text-lg">Paramètres</h2>
+      <div className="flex flex-wrap items-center gap-4 p-5 rounded-2xl ring-1 ring-gray-100 bg-gray-50/60">
+        <div className="w-12 h-12 rounded-full bg-[#002060] text-[#F2A900] font-bold text-lg flex items-center justify-center">
+          {(admin.name || admin.email).charAt(0).toUpperCase()}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-gray-800">{admin.name || 'Administrateur'}</p>
+          <p className="text-sm text-gray-500 truncate">{admin.email}</p>
+        </div>
+        <button onClick={onLogout} className="text-sm font-medium text-red-600 hover:text-red-700 flex items-center gap-1.5">
+          <LogOut size={15} /> Déconnexion
+        </button>
+      </div>
+      <div className="p-5 rounded-2xl ring-1 ring-gray-100 space-y-2 text-sm text-gray-600">
+        <p className="font-semibold text-gray-800 flex items-center gap-2"><ShieldCheck size={16} className="text-emerald-600" /> Mesure d'audience</p>
+        <p>
+          Les visites du site sont comptées sans cookie : ni adresse IP ni identifiant ne sont enregistrés, et
+          l'empreinte anonyme d'un visiteur change chaque jour. Les données sont effacées automatiquement après 13 mois.
+        </p>
+        <a href="/confidentialite#cookies" target="_blank" rel="noreferrer" className="inline-block text-[#1f4fbf] font-medium hover:underline">
+          Voir la politique de confidentialité
+        </a>
+      </div>
+    </div>
+  );
+}
+
+// ─── Coque du tableau de bord ─────────────────────────────────────────────────
+
+type Section = 'overview' | 'stats' | Tab | 'settings';
+
+const NAV: { title: string; items: { id: Section; label: string; icon: React.ReactNode }[] }[] = [
+  {
+    title: 'Menu principal',
+    items: [
+      { id: 'overview', label: 'Dashboard', icon: <LayoutDashboard size={18} /> },
+      { id: 'stats', label: 'Statistiques', icon: <BarChart3 size={18} /> },
+      { id: 'activities', label: 'Activités', icon: <Calendar size={18} /> },
+      { id: 'news', label: 'Actualités', icon: <BookOpen size={18} /> },
+      { id: 'gallery', label: 'Galerie', icon: <Image size={18} /> },
+      { id: 'donations', label: 'Dons', icon: <Heart size={18} /> },
+      { id: 'registrations', label: 'Inscriptions', icon: <ClipboardList size={18} /> },
+      { id: 'contacts', label: 'Messages', icon: <MessageSquare size={18} /> },
+      { id: 'subscribers', label: 'Newsletter', icon: <Mail size={18} /> },
+    ],
+  },
+  {
+    title: 'Gestion',
+    items: [
+      { id: 'members', label: 'Bureau', icon: <Users size={18} /> },
+      { id: 'scanner', label: 'Scanner de billets', icon: <QrCode size={18} /> },
+      { id: 'settings', label: 'Paramètres', icon: <Settings size={18} /> },
+    ],
+  },
+];
+const ALL_ITEMS = NAV.flatMap(g => g.items);
+
+function useClickOutside(onOutside: () => void) {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const handler = (e: MouseEvent) => { if (ref.current && !ref.current.contains(e.target as Node)) onOutside(); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [onOutside]);
+  return ref;
+}
+
+const normalize = (s: string) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 export default function AdminDashboard({ admin, onLogout }: { admin: AdminUser; onLogout: () => void }) {
-  const [tab, setTab] = useState<Tab>('activities');
+  const [section, setSection] = useState<Section>('overview');
+  const [drawer, setDrawer] = useState(false);
+  const [query, setQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [unread, setUnread] = useState<Contact[]>([]);
 
-  const TabContent = () => {
-    switch (tab) {
+  // Messages non lus : pastilles de la cloche et du menu (rafraîchies à chaque changement de rubrique).
+  useEffect(() => {
+    contactsApi.getAll().then((data: Contact[]) => setUnread(data.filter(c => !c.isRead))).catch(() => {});
+  }, [section]);
+
+  const closeSearch = useCallback(() => setSearchOpen(false), []);
+  const closeNotif = useCallback(() => setNotifOpen(false), []);
+  const closeProfile = useCallback(() => setProfileOpen(false), []);
+  const searchRef = useClickOutside(closeSearch);
+  const notifRef = useClickOutside(closeNotif);
+  const profileRef = useClickOutside(closeProfile);
+
+  const go = (id: Section) => {
+    setSection(id);
+    setDrawer(false);
+    setQuery('');
+    setSearchOpen(false);
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  };
+
+  const results = query.trim() ? ALL_ITEMS.filter(i => normalize(i.label).includes(normalize(query.trim()))) : [];
+  const current = ALL_ITEMS.find(i => i.id === section)!;
+  const initial = (admin.name || admin.email).charAt(0).toUpperCase();
+
+  const content = () => {
+    switch (section) {
+      case 'overview': return <OverviewTab onNavigate={go} />;
+      case 'stats': return <StatsTab />;
       case 'activities': return <ActivitiesTab />;
       case 'news': return <NewsTab />;
       case 'gallery': return <GalleryTab />;
@@ -646,49 +742,161 @@ export default function AdminDashboard({ admin, onLogout }: { admin: AdminUser; 
       case 'registrations': return <RegistrationsTab />;
       case 'donations': return <DonationsTab />;
       case 'scanner': return <ScannerTab />;
+      case 'settings': return <SettingsTab admin={admin} onLogout={onLogout} />;
     }
   };
 
+  const bare = section === 'overview' || section === 'stats';
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-teal-800 text-white px-4 sm:px-6 py-4 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <img src="/android-chrome-192x192.png" alt="Logo ZOBA" className="w-8 h-8 rounded-full object-cover" />
-          <div>
-            <p className="font-bold text-sm font-display">ZOBA — Admin</p>
-            <p className="text-teal-300 text-xs">{admin.email}</p>
+    <div className="min-h-screen bg-[#f3f5fa] lg:p-4">
+      {/* Voile du menu mobile */}
+      <div
+        className={`fixed inset-0 z-40 bg-[#001233]/50 backdrop-blur-[2px] transition-opacity lg:hidden ${drawer ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}
+        onClick={() => setDrawer(false)}
+        aria-hidden
+      />
+
+      {/* Barre latérale */}
+      <aside
+        className={`fixed z-50 inset-y-0 left-0 w-64 bg-gradient-to-b from-[#002060] to-[#001540] text-white flex flex-col
+          transition-transform duration-300 lg:translate-x-0 lg:inset-y-4 lg:left-4 lg:rounded-2xl lg:shadow-xl
+          ${drawer ? 'translate-x-0' : '-translate-x-full'}`}
+        aria-label="Menu d'administration"
+      >
+        <div className="flex items-center gap-3 px-5 pt-5 pb-4">
+          <img src="/android-chrome-192x192.png" alt="" className="w-10 h-10 rounded-full ring-2 ring-[#F2A900]/70 object-cover" />
+          <div className="flex-1 min-w-0">
+            <p className="font-display font-bold tracking-wide leading-none">ZOBA</p>
+            <p className="text-[11px] text-white/50 mt-1">Administration</p>
           </div>
+          <button onClick={() => setDrawer(false)} className="lg:hidden p-1.5 text-white/60 hover:text-white" aria-label="Fermer le menu"><X size={18} /></button>
         </div>
-        <button onClick={onLogout} className="group flex items-center gap-2 text-teal-200 hover:text-white text-sm transition-all duration-200 active:scale-95">
-          <LogOut size={16} className="transition-transform duration-200 group-hover:translate-x-0.5" /> Déconnexion
-        </button>
-      </header>
-
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8">
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Sidebar */}
-          <aside className="lg:w-52 flex-shrink-0">
-            <nav className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-              {TABS.map(({ id, label, icon }) => (
-                <button
-                  key={id}
-                  onClick={() => setTab(id)}
-                  className={`w-full flex items-center gap-3 px-4 py-3 text-sm font-medium border-b border-gray-50 last:border-0 transition-all duration-200 ${
-                    tab === id ? 'bg-teal-50 text-teal-700' : 'text-gray-600 hover:bg-gray-50 hover:text-gray-800 hover:pl-5'
-                  }`}
-                >
-                  {icon} {label}
-                </button>
-              ))}
-            </nav>
-          </aside>
-
-          {/* Content */}
-          <main className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-            <TabContent />
-          </main>
+        <nav className="flex-1 overflow-y-auto px-3 pb-3 space-y-4">
+          {NAV.map(group => (
+            <div key={group.title}>
+              <p className="px-3 mb-2 text-[10px] font-semibold tracking-[0.18em] uppercase text-white/40">{group.title}</p>
+              <ul className="space-y-0.5">
+                {group.items.map(item => {
+                  const active = section === item.id;
+                  return (
+                    <li key={item.id}>
+                      <button
+                        onClick={() => go(item.id)}
+                        aria-current={active ? 'page' : undefined}
+                        className={`relative w-full flex items-center gap-3 px-3 py-2 rounded-xl text-sm transition-all duration-200
+                          ${active ? 'bg-white/10 text-white font-semibold' : 'text-white/65 hover:text-white hover:bg-white/5'}`}
+                      >
+                        {active && <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r bg-[#F2A900]" />}
+                        <span className={active ? 'text-[#F2A900]' : ''}>{item.icon}</span>
+                        {item.label}
+                        {item.id === 'contacts' && unread.length > 0 && (
+                          <span className="ml-auto min-w-[1.25rem] h-5 px-1.5 rounded-full bg-[#F2A900] text-[#002060] text-[11px] font-bold flex items-center justify-center">{unread.length}</span>
+                        )}
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ))}
+        </nav>
+        <div className="m-3 p-3 rounded-xl bg-white/5 ring-1 ring-white/10 flex items-center justify-between gap-2">
+          <p className="text-xs text-white/60">Site public</p>
+          <a href="/" target="_blank" rel="noreferrer"
+            className="inline-flex items-center gap-1.5 rounded-lg bg-[#F2A900] text-[#002060] text-xs font-bold px-3 py-1.5 hover:brightness-105 transition">
+            Ouvrir le site <ExternalLink size={12} />
+          </a>
         </div>
+      </aside>
+
+      {/* Zone principale */}
+      <div className="lg:pl-[17rem]">
+        <header className="sticky top-0 lg:top-4 z-30 bg-white/90 backdrop-blur lg:rounded-2xl shadow-sm ring-1 ring-gray-100 px-3 sm:px-5 py-3 flex items-center gap-2 sm:gap-3">
+          <button onClick={() => setDrawer(true)} className="lg:hidden p-2 -ml-1 rounded-lg text-[#002060] hover:bg-gray-100" aria-label="Ouvrir le menu">
+            <Menu size={20} />
+          </button>
+          <div className="min-w-0">
+            <p className="text-[11px] text-gray-400 leading-none hidden sm:block">ZOBA · Administration</p>
+            <h1 className="font-bold text-[#002060] truncate sm:mt-1">{current.label}</h1>
+          </div>
+
+          <div className="ml-auto flex items-center gap-1 sm:gap-2">
+            {/* Recherche dans les rubriques */}
+            <div ref={searchRef} className="relative">
+              <label className="flex items-center gap-2 bg-gray-100 rounded-xl px-3 py-2 w-32 sm:w-56 focus-within:ring-2 focus-within:ring-[#1f4fbf]/40 focus-within:bg-white transition">
+                <Search size={16} className="text-gray-400 flex-shrink-0" />
+                <input
+                  value={query}
+                  onChange={e => { setQuery(e.target.value); setSearchOpen(true); }}
+                  onFocus={() => setSearchOpen(true)}
+                  onKeyDown={e => { if (e.key === 'Enter' && results[0]) go(results[0].id); if (e.key === 'Escape') setSearchOpen(false); }}
+                  placeholder="Rechercher…"
+                  aria-label="Rechercher une rubrique"
+                  className="bg-transparent text-sm outline-none w-full min-w-0 placeholder-gray-400"
+                />
+              </label>
+              {searchOpen && query.trim() && (
+                <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-xl ring-1 ring-black/5 py-1.5 z-10">
+                  {results.length ? results.map(r => (
+                    <button key={r.id} onClick={() => go(r.id)} className="w-full flex items-center gap-3 px-3.5 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                      <span className="text-[#1f4fbf]">{r.icon}</span>{r.label}
+                    </button>
+                  )) : <p className="px-3.5 py-2 text-sm text-gray-400">Aucune rubrique trouvée</p>}
+                </div>
+              )}
+            </div>
+
+            {/* Notifications : messages non lus */}
+            <div ref={notifRef} className="relative">
+              <button onClick={() => setNotifOpen(o => !o)} className="relative p-2 rounded-xl text-gray-500 hover:text-[#002060] hover:bg-gray-100 transition" aria-label={`Notifications (${unread.length} non lues)`}>
+                <Bell size={19} />
+                {unread.length > 0 && <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] font-bold flex items-center justify-center ring-2 ring-white">{unread.length > 9 ? '9+' : unread.length}</span>}
+              </button>
+              {notifOpen && (
+                <div className="absolute right-0 mt-2 w-[min(20rem,calc(100vw-1.5rem))] bg-white rounded-xl shadow-xl ring-1 ring-black/5 z-10 overflow-hidden">
+                  <p className="px-4 py-3 text-sm font-semibold text-[#002060] border-b border-gray-100">Messages non lus</p>
+                  {unread.length ? (
+                    <ul className="max-h-72 overflow-y-auto divide-y divide-gray-50">
+                      {unread.slice(0, 5).map(m => (
+                        <li key={m._id}>
+                          <button onClick={() => { setNotifOpen(false); go('contacts'); }} className="w-full text-left px-4 py-3 hover:bg-gray-50">
+                            <p className="text-sm font-medium text-gray-800 truncate">{m.name}</p>
+                            <p className="text-xs text-gray-500 line-clamp-1">{m.message}</p>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : <p className="px-4 py-6 text-sm text-gray-400 text-center">Tout est lu.</p>}
+                </div>
+              )}
+            </div>
+
+            {/* Profil */}
+            <div ref={profileRef} className="relative">
+              <button onClick={() => setProfileOpen(o => !o)} className="flex items-center gap-2 p-1 sm:pr-2 rounded-xl hover:bg-gray-100 transition" aria-label="Profil">
+                <span className="w-8 h-8 rounded-full bg-[#002060] text-[#F2A900] font-bold text-sm flex items-center justify-center">{initial}</span>
+                <ChevronDown size={14} className="text-gray-400 hidden sm:block" />
+              </button>
+              {profileOpen && (
+                <div className="absolute right-0 mt-2 w-60 bg-white rounded-xl shadow-xl ring-1 ring-black/5 z-10 py-1.5">
+                  <div className="px-4 py-2.5 border-b border-gray-100">
+                    <p className="text-sm font-semibold text-gray-800 truncate">{admin.name || 'Administrateur'}</p>
+                    <p className="text-xs text-gray-500 truncate">{admin.email}</p>
+                  </div>
+                  <button onClick={() => { setProfileOpen(false); go('settings'); }} className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"><Settings size={15} /> Paramètres</button>
+                  <button onClick={onLogout} className="w-full flex items-center gap-2.5 px-4 py-2 text-sm text-red-600 hover:bg-red-50"><LogOut size={15} /> Déconnexion</button>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        <main className="px-3 sm:px-5 lg:px-0 py-5 lg:pt-6">
+          {bare ? content() : (
+            <div className="bg-white rounded-2xl shadow-sm ring-1 ring-gray-100 p-4 sm:p-6">{content()}</div>
+          )}
+        </main>
       </div>
     </div>
   );

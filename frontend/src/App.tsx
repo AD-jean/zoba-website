@@ -13,6 +13,7 @@ import ContactPage from './pages/ContactPage';
 import DonationsPage from './pages/DonationsPage';
 import TicketPage from './pages/TicketPage';
 import PrivacyPage from './pages/PrivacyPage';
+import { usePageTracking } from './lib/analytics';
 
 const AdminPage = lazy(() => import('./pages/admin/AdminPage'));
 
@@ -45,6 +46,7 @@ function ScrollManager() {
 function Layout() {
   const location = useLocation();
   const isAdmin = location.pathname.startsWith('/admin');
+  usePageTracking();
 
   return (
     <>
